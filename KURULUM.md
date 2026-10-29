@@ -66,3 +66,21 @@ Next, sayfa bileşenlerini ve API yollarını ayrı paketlere derliyor; sıradan
 modül değişkeni ikisi arasında paylaşılmıyor. Müşterinin API üzerinden aldığı
 randevunun panelde görünmesi için depo `globalThis`te tutuluyor.
 Postgres bağlıyken bu kodun hiçbir önemi yok.
+
+## Sesli randevu
+
+Panel → Takvim'deki mikrofon, tarayıcının kendi ses tanıma motorunu kullanır
+(Web Speech API, `tr-TR`). Ses sunucuya gönderilmez, ek ücret yoktur.
+Çalıştığı yerler: iPhone'da Safari 14.5+, Android ve masaüstünde Chrome/Edge.
+Firefox desteklemiyor — orada cümle elle yazılır, çözümleme aynı şekilde çalışır.
+Mikrofon için HTTPS şart (localhost hariç).
+
+Cümleyi `src/lib/sesCoz.ts` çözüyor: kural tabanlı, saf, ağ kullanmıyor.
+Çıkan sonuç doğrudan kaydedilmez; doldurulmuş form olarak gösterilir, salon
+sahibi onaylar. Ses tanıma özellikle isimlerde yanılıyor.
+
+Denemeleri çalıştırmak için:
+
+```
+npx tsx sesCoz.test.ts
+```

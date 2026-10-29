@@ -141,7 +141,7 @@ export default async function Takvim({
       )}
 
       <div className="space-y-3">
-        <ElleRandevu gun={gun} hizmetler={salon.hizmetler} personel={salon.personel} />
+        <ElleRandevu gun={gun} salon={salon} />
 
         {/* saat kapatma */}
         <details className="rounded-3xl border border-cizgi bg-kart p-5">
