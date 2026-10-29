@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   SALONKOLAY — açık, sıcak, mobil öncelikli.
+
+   Medya 333'ün siyah-altın dili burada YOK. Bu ürünün müşterisi
+   salon sahibi ve onun müşterisi; ajans estetiği değil, güven ve
+   okunaklılık gerekiyor.
+------------------------------------------------------------------ */
+
+@theme {
+  --color-kagit: #fdf6f8;
+  --color-kart: #ffffff;
+  --color-murekkep: #2b1620;
+  --color-gri: #6f5b65;
+  --color-silik: #a8949d;
+  --color-cizgi: #f3e2e8;
+  --color-ana: #b84a6e;
+  --color-ana-koyu: #9a3a5a;
+  --color-yumusak: #fdeef3;
+  --color-yesil: #1a8f5f;
+
+  --font-sans: "Outfit", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  background: var(--color-kagit);
+  color: var(--color-murekkep);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* iOS'ta input'a basınca sayfanın zıplamasını engeller */
+input,
+select,
+textarea,
+button {
+  font-size: 16px;
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gir {
+    animation: gir 0.26s ease-out both;
+  }
+}
+@keyframes gir {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* yatay kaydırma şeritleri — gün ve saat seçimi */
+.serit {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.serit::-webkit-scrollbar {
+  display: none;
+}
