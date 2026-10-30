@@ -8,7 +8,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cikisYap, girisDene, oturumSlug, sifreDegistir } from "@/lib/oturum";
-import type { Calisma, Hizmet, Personel, Salon } from "@/lib/salon";
+import type { Calisma, GaleriOgesi, Hizmet, Personel, Salon } from "@/lib/salon";
 import { salonGetir, salonKaydet } from "@/lib/salonVeri";
 import {
   durumDegistir,
@@ -344,7 +344,7 @@ export async function gorselYukleEylem(
   if (!salon) return "Salon bulunamadı.";
 
   const tur = String(veri.get("tur") ?? "") as GorselTuru;
-  if (!["logo", "kapak", "galeri", "ekip"].includes(tur)) return "Görsel türü geçersiz.";
+  if (!["logo", "kapak", "galeri", "ekip", "oncesi"].includes(tur)) return "Görsel türü geçersiz.";
 
   const dosya = veri.get("dosya");
   if (!(dosya instanceof File)) return "Dosya seçilmedi.";
@@ -365,6 +365,18 @@ export async function gorselYukleEylem(
     yeni.kapak = sonuc.url;
   } else if (tur === "galeri") {
     yeni.galeri = [...(yeni.galeri ?? []), sonuc.url];
+  } else if (tur === "oncesi") {
+    const hedef = String(veri.get("hedef") ?? "");
+    const adres = (g: string | GaleriOgesi) => (typeof g === "string" ? g : g.url);
+    if (!yeni.galeri?.some((g) => adres(g) === hedef)) {
+      await gorselSil(slug, sonuc.url);
+      return "Fotoğraf bulunamadı.";
+    }
+    yeni.galeri = yeni.galeri.map((g) => {
+      if (adres(g) !== hedef) return g;
+      const o: GaleriOgesi = typeof g === "string" ? { url: g } : { ...g };
+      return { ...o, oncesi: sonuc.url };
+    });
   } else {
     const pid = String(veri.get("personelId") ?? "");
     const i = yeni.personel.findIndex((p) => p.id === pid);
@@ -396,9 +408,23 @@ export async function gorselSilEylem(veri: FormData): Promise<void> {
     yeni.kapak = undefined;
   } else if (tur === "galeri") {
     const url = String(veri.get("url") ?? "");
-    if (!yeni.galeri?.includes(url)) return;
+    // Galeri hem düz adres hem nesne tutabiliyor; ikisini de yakala.
+    const adres = (g: string | GaleriOgesi) => (typeof g === "string" ? g : g.url);
+    if (!yeni.galeri?.some((g) => adres(g) === url)) return;
     await gorselSil(slug, url);
-    yeni.galeri = yeni.galeri.filter((g) => g !== url);
+    // Nesne biçimindeki kaydın "öncesi" fotoğrafı da öksüz kalmasın.
+    const silinen = yeni.galeri.find((g) => adres(g) === url);
+    if (typeof silinen !== "string" && silinen?.oncesi) await gorselSil(slug, silinen.oncesi);
+    yeni.galeri = yeni.galeri.filter((g) => adres(g) !== url);
+  } else if (tur === "oncesi") {
+    const hedef = String(veri.get("url") ?? "");
+    const adres = (g: string | GaleriOgesi) => (typeof g === "string" ? g : g.url);
+    const oge = yeni.galeri?.find((g) => adres(g) === hedef);
+    if (!oge || typeof oge === "string" || !oge.oncesi) return;
+    await gorselSil(slug, oge.oncesi);
+    yeni.galeri = yeni.galeri!.map((g) =>
+      adres(g) === hedef && typeof g !== "string" ? { ...g, oncesi: undefined } : g
+    );
   } else if (tur === "ekip") {
     const pid = String(veri.get("personelId") ?? "");
     const kisi = yeni.personel.find((p) => p.id === pid);
@@ -485,4 +511,39 @@ export async function denemePostasiEylem(
   const m = denemePostasi(salon.ad, `${siteKoku()}/panel/bugun`);
   const sonuc = await epostaGonder({ kime: salon.eposta, ...m });
   return sonuc.tamam ? "tamam" : sonuc.sebep;
+}
+
+
+/** Galeri karesinin başlığı ve hangi hizmet grubuna ait olduğu. */
+export async function galeriBilgiEylem(
+  _onceki: string | null,
+  veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return "Salon bulunamadı.";
+
+  const hedef = String(veri.get("url") ?? "");
+  const adres = (g: string | GaleriOgesi) => (typeof g === "string" ? g : g.url);
+  if (!salon.galeri?.some((g) => adres(g) === hedef)) return "Fotoğraf bulunamadı.";
+
+  const kes = (ad: string, uzunluk: number) =>
+    String(veri.get(ad) ?? "").trim().slice(0, uzunluk) || undefined;
+
+  const galeri = salon.galeri.map((g) => {
+    if (adres(g) !== hedef) return g;
+    const o: GaleriOgesi = typeof g === "string" ? { url: g } : { ...g };
+    return {
+      ...o,
+      baslik: kes("baslik", 60),
+      baslikEn: kes("baslikEn", 60),
+      grup: kes("grup", 40),
+      grupEn: kes("grupEn", 40),
+    };
+  });
+
+  await salonKaydet({ ...salon, galeri });
+  tazele();
+  revalidatePath(`/${slug}`);
+  return "tamam";
 }

@@ -11,6 +11,7 @@ import {
 import FotoFormu from "./FotoFormu";
 import BildirimFormu from "./BildirimFormu";
 import { epostaKuruluMu } from "@/lib/eposta";
+import { galeriOgeleri } from "@/lib/salon";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,9 @@ export default async function Ayarlar() {
         <FotoFormu
           logo={salon.logo}
           kapak={salon.kapak}
-          galeri={salon.galeri}
+          galeri={galeriOgeleri(salon)}
+          gruplar={[...new Set(salon.hizmetler.map((h) => h.grup).filter(Boolean) as string[])]}
+          ingilizce={salon.ingilizce}
           personel={salon.personel}
         />
       </Bolum>

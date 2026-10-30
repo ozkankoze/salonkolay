@@ -17,13 +17,15 @@
 import sharp from "sharp";
 import { kimlikUret, pgVarMi, sorgu } from "./db";
 
-export type GorselTuru = "logo" | "kapak" | "galeri" | "ekip";
+export type GorselTuru = "logo" | "kapak" | "galeri" | "ekip" | "oncesi";
 
 /** Her tür için en uzun kenar ve kalite. */
 const OLCU: Record<GorselTuru, { kenar: number; kalite: number; kare: boolean }> = {
   logo: { kenar: 600, kalite: 90, kare: false },
   kapak: { kenar: 1600, kalite: 82, kare: false },
   galeri: { kenar: 1400, kalite: 80, kare: false },
+  // "Öncesi" karesi galeriyle yan yana gösterildiği için aynı ölçüde.
+  oncesi: { kenar: 1400, kalite: 80, kare: false },
   ekip: { kenar: 800, kalite: 85, kare: true },
 };
 

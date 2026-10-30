@@ -27,19 +27,26 @@ export default function Randevu({
   dil,
   t,
   onSecili = [],
+  onPersonel,
 }: {
   salon: Salon;
   dil: Dil;
   t: Sozluk;
   /** Salon sayfasından seçilip adresle taşınan hizmetler (?h=). */
   onSecili?: string[];
+  /** Ekip kartından "X ile randevu al" denildiyse o kişi (?p=). */
+  onPersonel?: string;
 }) {
   const yol = (a: string) => dilliAdres(a, dil);
   // Hizmetini sayfada seçtiyse ilk adımı tekrar göstermenin anlamı yok;
   // doğrudan uzman seçimine geçiyoruz.
-  const [adim, setAdim] = useState<Adim>(onSecili.length ? 2 : 1);
+  // Hem hizmet hem kişi belliyse doğrudan gün seçimine, yalnız hizmet
+  // belliyse kişi seçimine atlıyoruz.
+  const [adim, setAdim] = useState<Adim>(
+    onSecili.length ? (onPersonel ? 3 : 2) : 1
+  );
   const [secili, setSecili] = useState<string[]>(onSecili);
-  const [personel, setPersonel] = useState("farketmez");
+  const [personel, setPersonel] = useState(onPersonel ?? "farketmez");
   const [gun, setGun] = useState("");
   const [saat, setSaat] = useState("");
   const [ad, setAd] = useState("");
@@ -60,6 +67,17 @@ export default function Randevu({
   const fiyatlar = hizmetler.map((h) => h.fiyat);
   const tamFiyat = fiyatlar.every((f) => typeof f === "number");
   const toplamFiyat = tamFiyat ? (fiyatlar as number[]).reduce((a, b) => a + b, 0) : undefined;
+
+  /**
+   * Ekip kartından gelindiyse (?p=) yalnız o kişinin yaptığı işler
+   * listelenir; yoksa müşteri kişinin yapmadığı bir hizmeti seçip
+   * çıkmaz bir akışa giriyor.
+   */
+  const secilebilirHizmetler = useMemo(() => {
+    const kisi = salon.personel.find((p) => p.id === personel);
+    if (!kisi?.hizmetler) return salon.hizmetler;
+    return salon.hizmetler.filter((h) => kisi.hizmetler!.includes(h.id));
+  }, [salon.hizmetler, salon.personel, personel]);
 
   /** seçilen hizmetleri yapabilen personel */
   const uygunPersonel = useMemo(
@@ -237,7 +255,7 @@ export default function Randevu({
           <h2 className="text-[21px] font-semibold tracking-[-0.02em]">{t.neYaptiracaksiniz}</h2>
           <p className="mt-1 text-[14.5px] text-silik">{t.birdenFazla}</p>
           <ul className="mt-4 space-y-2">
-            {salon.hizmetler.map((h) => {
+            {secilebilirHizmetler.map((h) => {
               const aktif = secili.includes(h.id);
               return (
                 <li key={h.id}>

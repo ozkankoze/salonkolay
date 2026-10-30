@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { hizmetGruplari, type Salon } from "@/lib/salon";
+import {
+  galeriGrupEn,
+  galeriGruplari,
+  galeriOgeleri,
+  hizmetGruplari,
+  type Salon,
+} from "@/lib/salon";
 import { puanOrtalamasi, salonDurumu, type Durum } from "@/lib/saat";
 import { anTR } from "@/lib/zaman";
 import { cookies } from "next/headers";
@@ -20,6 +26,7 @@ import {
 } from "@/lib/dil";
 import DilDugmesi from "../DilDugmesi";
 import HizmetSecimi from "./HizmetSecimi";
+import Galeri from "./Galeri";
 import { salonGetir } from "@/lib/salonVeri";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +75,12 @@ export default async function SalonSitesi({
   const bugun = an.haftaGunu;
   const durum = salonDurumu(s, an);
   const puan = puanOrtalamasi(s);
+
+  const foto = galeriOgeleri(s);
+  const fotoGruplari = galeriGruplari(s);
+  const fotoGrupAdi = Object.fromEntries(
+    fotoGruplari.map((g) => [g, sec(g, galeriGrupEn(s, g), dil) ?? g])
+  );
   const gruplar = hizmetGruplari(s, dil === "en");
   const stil = {
     "--renk": s.renk,
@@ -172,9 +185,9 @@ export default async function SalonSitesi({
               </h2>
               <p className="mt-4 text-[16.5px] leading-[1.7] opacity-75">{sec(s.hakkinda, s.hakkindaEn, dil)}</p>
             </div>
-            {s.galeri?.[0] && (
+            {foto[0] && (
               <Image
-                src={s.galeri[0]}
+                src={foto[0].url}
                 alt=""
                 width={1200}
                 height={800}
@@ -242,30 +255,59 @@ export default async function SalonSitesi({
               {p.unvan && (
                 <div className="mt-1 text-[14px] opacity-60">{sec(p.unvan, p.unvanEn, dil)}</div>
               )}
+
+              {/* hangi işleri yapıyor */}
+              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                {p.hizmetler ? (
+                  s.hizmetler
+                    .filter((h) => p.hizmetler!.includes(h.id))
+                    .map((h) => (
+                      <span
+                        key={h.id}
+                        className="rounded-full px-2.5 py-1 text-[12.5px]"
+                        style={{ background: `${s.renk}14`, color: s.renk }}
+                      >
+                        {sec(h.ad, h.adEn, dil)}
+                      </span>
+                    ))
+                ) : (
+                  <span
+                    className="rounded-full px-2.5 py-1 text-[12.5px]"
+                    style={{ background: `${s.renk}14`, color: s.renk }}
+                  >
+                    {t.tumHizmetler}
+                  </span>
+                )}
+              </div>
+
+              <Link
+                href={yol(`/${s.slug}/randevu?p=${p.id}`)}
+                className="mt-4 inline-block rounded-full border px-5 py-2.5 text-[14.5px] font-semibold"
+                style={{ borderColor: `${s.renk}55`, color: s.koyu }}
+              >
+                {doldur(t.ileRandevuAl, { ad: p.ad })}
+              </Link>
             </div>
           ))}
         </div>
       </section>
 
       {/* ═══════ galeri ═══════ */}
-      {s.galeri && s.galeri.length > 1 && (
+      {foto.length > 1 && (
         <section id="galeri" className="mx-auto max-w-[1120px] px-5 py-10">
           <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
             {t.salondan}
           </div>
           <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.galeri}</h2>
-          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3">
-            {s.galeri.map((g, i) => (
-              <Image
-                key={g}
-                src={g}
-                alt=""
-                width={1200}
-                height={800}
-                className={`w-full rounded-2xl object-cover ${i === 0 ? "h-[220px] md:h-[300px] md:col-span-2" : "h-[220px] md:h-[300px]"}`}
-              />
-            ))}
-          </div>
+          <Galeri
+            ogeler={foto}
+            gruplar={fotoGruplari}
+            grupAdi={fotoGrupAdi}
+            dil={dil}
+            t={t}
+            renk={s.renk}
+            koyu={s.koyu}
+          />
         </section>
       )}
 

@@ -37,10 +37,10 @@ export default async function RandevuSayfasi({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ dil?: string; h?: string }>;
+  searchParams: Promise<{ dil?: string; h?: string; p?: string }>;
 }) {
   const { slug } = await params;
-  const { dil: adresDili, h } = await searchParams;
+  const { dil: adresDili, h, p } = await searchParams;
   const s = await salonGetir(slug);
   if (!s) notFound();
 
@@ -54,6 +54,15 @@ export default async function RandevuSayfasi({
     .split(",")
     .map((x) => x.trim())
     .filter((x) => s.hizmetler.some((hz) => hz.id === x));
+
+  // Ekip kartından gelen kişi (?p=). Salonda yoksa, ya da adresle
+  // gelen hizmetlerden birini yapmıyorsa yok sayılır — çelişkili bir
+  // ön seçimle akışı kilitlemektense kişiyi düşürmek daha iyi.
+  const kisi = s.personel.find((x) => x.id === p);
+  const onPersonel =
+    kisi && (!kisi.hizmetler || onSecili.every((id) => kisi.hizmetler!.includes(id)))
+      ? kisi.id
+      : undefined;
 
   return (
     <div lang={dil} className="min-h-dvh" style={{ background: s.zemin }}>
@@ -120,7 +129,13 @@ export default async function RandevuSayfasi({
         </p>
 
         <div className="mt-8">
-          <Randevu salon={s} dil={dil} t={t} onSecili={onSecili} />
+          <Randevu
+            salon={s}
+            dil={dil}
+            t={t}
+            onSecili={onSecili}
+            onPersonel={onPersonel}
+          />
         </div>
 
         {s.demo ? (

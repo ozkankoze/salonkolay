@@ -44,6 +44,24 @@ export type Calisma = {
   kapali?: boolean;
 };
 
+/**
+ * Galeri fotoğrafı.
+ *
+ * Eski kayıtlarda galeri düz bir adres dizisiydi; veritabanında öyle
+ * duran salonlar var. O yüzden iki biçim de kabul ediliyor, okuyan
+ * taraf `galeriOgeleri()` ile tek biçime çeviriyor.
+ */
+export type GaleriOgesi = {
+  url: string;
+  /** Varsa kart "öncesi / sonrası" olarak gösterilir. */
+  oncesi?: string;
+  /** Filtre için hizmet grubu — hizmetlerdeki `grup` ile aynı yazılır. */
+  grup?: string;
+  grupEn?: string;
+  baslik?: string;
+  baslikEn?: string;
+};
+
 export type Yorum = {
   ad: string;
   puan: number;
@@ -82,7 +100,7 @@ export type Salon = {
   acikZemin: string; // kart arka planı
 
   kapak?: string;
-  galeri?: string[];
+  galeri?: (string | GaleriOgesi)[];
   yorumlar?: Yorum[];
   rakamlar?: { sayi: string; etiket: string; etiketEn?: string }[];
 
@@ -129,7 +147,20 @@ export const salonlar: Salon[] = [
     acikZemin: "#FFFFFF",
 
     kapak: "/salon/k1.jpg",
-    galeri: ["/salon/s1.jpg", "/salon/k2.jpg", "/salon/s2.jpg", "/salon/k3.jpg", "/salon/s3.jpg"],
+    galeri: [
+      { url: "/salon/s1.jpg", grup: "Saç", grupEn: "Hair", baslik: "Kesim sonrası", baslikEn: "After the cut" },
+      {
+        url: "/salon/k2.jpg",
+        oncesi: "/salon/s2.jpg",
+        grup: "Renk",
+        grupEn: "Colour",
+        baslik: "Balyaj çalışması",
+        baslikEn: "Balayage work",
+      },
+      { url: "/salon/s2.jpg", grup: "Renk", grupEn: "Colour" },
+      { url: "/salon/k3.jpg", grup: "Bakım", grupEn: "Care", baslik: "Keratin bakımı", baslikEn: "Keratin treatment" },
+      { url: "/salon/s3.jpg", grup: "Saç", grupEn: "Hair" },
+    ],
     rakamlar: [
       { sayi: "10+", etiket: "yıllık deneyim", etiketEn: "years of experience" },
       { sayi: "4.000+", etiket: "misafir", etiketEn: "guests" },
@@ -276,4 +307,25 @@ export function hizmetGruplari(
     baslik: ingilizceMi ? (hizmetler.find((h) => h.grupEn?.trim())?.grupEn ?? grup) : grup,
     hizmetler,
   }));
+}
+
+
+/** Galeriyi tek biçime indirger (eski düz adres dizisi de çalışsın diye). */
+export function galeriOgeleri(s: Salon): GaleriOgesi[] {
+  return (s.galeri ?? []).map((g) => (typeof g === "string" ? { url: g } : g));
+}
+
+/** Galeride kullanılan grup başlıkları — filtre şeridi bunlardan kurulur. */
+export function galeriGruplari(s: Salon): string[] {
+  const gorulen: string[] = [];
+  for (const o of galeriOgeleri(s)) {
+    const g = o.grup?.trim();
+    if (g && !gorulen.includes(g)) gorulen.push(g);
+  }
+  return gorulen;
+}
+
+/** Bir grubun İngilizce karşılığı (ilk dolu `grupEn` kazanır). */
+export function galeriGrupEn(s: Salon, grup: string): string | undefined {
+  return galeriOgeleri(s).find((o) => o.grup === grup && o.grupEn?.trim())?.grupEn;
 }

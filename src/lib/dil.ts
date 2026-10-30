@@ -66,6 +66,18 @@ const TR = {
   skDescription:
     "Müşteriniz saatini kendi seçsin, randevu size düşsün. Instagram bio'nuza koyacağınız randevu sayfası.",
 
+  // galeri
+  hepsi: "Hepsi",
+  oncesi: "Öncesi",
+  sonrasi: "Sonrası",
+  oncesiSonrasi: "Öncesi / Sonrası",
+  buGruptaFotoYok: "Bu başlıkta henüz fotoğraf yok.",
+
+  // ekip
+  ileRandevuAl: "{ad} ile randevu al",
+  yaptigiIsler: "Yaptığı işler",
+  tumHizmetler: "Tüm hizmetler",
+
   // ilk ekran durumu
   suAnAcik: "Şu an açık",
   suAnKapali: "Şu an kapalı",
@@ -235,6 +247,16 @@ const EN: Sozluk = {
   skTitle: "Salonkolay — a booking page for your salon",
   skDescription:
     "Let your clients pick their own time and have the booking land with you. A booking page for your Instagram bio.",
+
+  hepsi: "All",
+  oncesi: "Before",
+  sonrasi: "After",
+  oncesiSonrasi: "Before / After",
+  buGruptaFotoYok: "No photos under this heading yet.",
+
+  ileRandevuAl: "Book with {ad}",
+  yaptigiIsler: "Services",
+  tumHizmetler: "All services",
 
   suAnAcik: "Open now",
   suAnKapali: "Closed now",
