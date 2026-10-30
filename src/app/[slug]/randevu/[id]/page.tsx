@@ -23,6 +23,7 @@ import {
 } from "@/lib/dil";
 import DilDugmesi from "../../../DilDugmesi";
 import Iptal from "./Iptal";
+import Ertele from "./Ertele";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,11 @@ export default async function RandevuDetay({
   const tutar = hizmetler.reduce((toplam, h) => toplam + (h.fiyat ?? 0), 0);
   const iptalEdildi = r.durum === "iptal";
 
+  // "Aynı randevuyu tekrar al": hizmetleri ve kişiyi akışa taşı.
+  const tekrarAdresi =
+    `/${s.slug}/randevu?h=${r.hizmetIds.join(",")}` +
+    (r.personelId && r.personelId !== "farketmez" ? `&p=${r.personelId}` : "");
+
   const gun = gunYazDil(r.gun, dil);
   const saat = saatYaz(r.baslangic);
   const mesaj = doldur(t.waRandevuMesaji, { gun, saat, ad: r.ad });
@@ -119,15 +125,43 @@ export default async function RandevuDetay({
       {iptalEdildi ? (
         <div className="mt-6">
           <Link
-            href={yol(`/${s.slug}/randevu`)}
+            href={yol(tekrarAdresi)}
             className="block rounded-xl py-3.5 text-center text-[15.5px] font-semibold text-white"
             style={{ background: s.koyu }}
+          >
+            {t.ayniRandevuyuTekrarAl}
+          </Link>
+          <Link
+            href={yol(`/${s.slug}/randevu`)}
+            className="mt-2 block rounded-xl border py-3.5 text-center text-[15.5px] font-medium"
+            style={{ borderColor: "rgba(0,0,0,.15)", color: s.koyu }}
           >
             {t.yeniRandevuAl}
           </Link>
         </div>
       ) : (
         <div className="mt-6 space-y-3">
+          <Ertele
+            salon={s}
+            id={r.id}
+            anahtar={k!}
+            dakika={r.dakika}
+            personelId={r.personelId}
+            dil={dil}
+            t={t}
+            renk={s.renk}
+            koyu={s.koyu}
+          />
+
+          <a
+            href={`/${s.slug}/randevu/${r.id}/ics?k=${k}`}
+            className="block rounded-xl border py-3.5 text-center text-[15.5px] font-medium"
+            style={{ borderColor: "rgba(0,0,0,.15)", color: s.koyu }}
+          >
+            {t.takvimeEkle}
+          </a>
+          <p className="-mt-1 text-center text-[12.5px] text-silik">{t.takvimeEkleAciklama}</p>
+
           <Iptal
             salon={s.slug}
             id={r.id}
@@ -158,7 +192,7 @@ export default async function RandevuDetay({
           </div>
 
           <p className="pt-1 text-center text-[13px] leading-relaxed text-silik">
-            {t.saatiDegistirmek}
+            {t.sorunVarsaArayin}
           </p>
         </div>
       )}

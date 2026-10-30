@@ -12,6 +12,8 @@ export async function GET(istek: Request) {
   const gun = u.searchParams.get("gun") ?? "";
   const dk = Number(u.searchParams.get("dk") ?? 0);
   const personel = u.searchParams.get("personel") ?? "farketmez";
+  // Erteleme ekranı için: müşterinin kendi randevusu çakışma sayılmasın.
+  const yok = u.searchParams.get("yok");
 
   const salon = await salonGetir(slug);
   if (!salon) return NextResponse.json({ hata: "Salon bulunamadı" }, { status: 404 });
@@ -21,6 +23,7 @@ export async function GET(istek: Request) {
     salonunRandevulari(slug),
     salonunKapaliklari(slug),
   ]);
-  const saatler = musaitSaatler(salon, gun, dk, personel, mevcut, simdiTR(), kapaliklar);
+  const hesaba = yok ? mevcut.filter((r) => r.id !== yok) : mevcut;
+  const saatler = musaitSaatler(salon, gun, dk, personel, hesaba, simdiTR(), kapaliklar);
   return NextResponse.json({ saatler });
 }

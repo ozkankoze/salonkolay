@@ -79,6 +79,25 @@ export default function Randevu({
     return salon.hizmetler.filter((h) => kisi.hizmetler!.includes(h.id));
   }, [salon.hizmetler, salon.personel, personel]);
 
+  /**
+   * Hizmetleri sitedeki gibi başlıklara ayır. Sekiz hizmet düz liste
+   * hâlinde göz yoruyor; "Saç / Renk / Bakım" diye bölününce müşteri
+   * aradığını daha çabuk buluyor.
+   */
+  const hizmetGruplari = useMemo(() => {
+    const harita = new Map<string, typeof secilebilirHizmetler>();
+    for (const h of secilebilirHizmetler) {
+      const anahtar = h.grup ?? "";
+      if (!harita.has(anahtar)) harita.set(anahtar, []);
+      harita.get(anahtar)!.push(h);
+    }
+    return [...harita.entries()].map(([grup, hizmetler]) => ({
+      grup,
+      baslik: dil === "en" ? (hizmetler.find((h) => h.grupEn?.trim())?.grupEn ?? grup) : grup,
+      hizmetler,
+    }));
+  }, [secilebilirHizmetler, dil]);
+
   /** seçilen hizmetleri yapabilen personel */
   const uygunPersonel = useMemo(
     () => salon.personel.filter((p) => !p.hizmetler || secili.every((h) => p.hizmetler!.includes(h))),
@@ -254,8 +273,15 @@ export default function Randevu({
         <div className="gir">
           <h2 className="text-[21px] font-semibold tracking-[-0.02em]">{t.neYaptiracaksiniz}</h2>
           <p className="mt-1 text-[14.5px] text-silik">{t.birdenFazla}</p>
-          <ul className="mt-4 space-y-2">
-            {secilebilirHizmetler.map((h) => {
+          {hizmetGruplari.map((g) => (
+          <div key={g.grup} className="mt-4">
+          {g.baslik && (
+            <h3 className="mb-2 text-[12px] font-semibold tracking-[0.16em] uppercase text-silik">
+              {g.baslik}
+            </h3>
+          )}
+          <ul className="space-y-2">
+            {g.hizmetler.map((h) => {
               const aktif = secili.includes(h.id);
               return (
                 <li key={h.id}>
@@ -289,6 +315,8 @@ export default function Randevu({
               );
             })}
           </ul>
+          </div>
+          ))}
           <Devam
             etiket={t.devam}
             renk={R}
@@ -392,10 +420,10 @@ export default function Randevu({
 
           <div className="mt-5 min-h-[120px]">
             {!gun && <p className="text-[14.5px] text-silik">{t.onceGunSecin}</p>}
-            {gun && saatler === null && <p className="text-[14.5px] text-silik">Saatler getiriliyor…</p>}
+            {gun && saatler === null && <p className="text-[14.5px] text-silik">{t.saatlerGetiriliyor}</p>}
             {gun && saatler && saatler.length === 0 && (
               <p className="text-[14.5px] text-silik">
-                Bu gün için uygun saat kalmamış. Başka bir gün seçebilir ya da salonu arayabilirsiniz.
+                {t.oGunMusaitDegil} {t.baskaGunSecin}
               </p>
             )}
             {gun && saatler && saatler.length > 0 && (
@@ -440,6 +468,13 @@ export default function Randevu({
                 {gunYazDil(gun, dil)} · {saat}
               </>
             )}
+            <br />
+            <span className="text-gri">
+              {t.kiminle}:{" "}
+              {personel === "farketmez"
+                ? t.farketmez
+                : (salon.personel.find((p) => p.id === personel)?.ad ?? t.farketmez)}
+            </span>
             <br />
             <span className="text-gri">
               {sureYazDil(toplamDk, dil)}

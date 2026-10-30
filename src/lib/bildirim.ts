@@ -8,7 +8,13 @@
  * geçilir, randevu yine de kaydedilmiştir.
  */
 
-import { epostaGonder, iptalPostasi, yeniRandevuPostasi } from "./eposta";
+import {
+  epostaGonder,
+  ertelePostasi,
+  gunlukOzetPostasi,
+  iptalPostasi,
+  yeniRandevuPostasi,
+} from "./eposta";
 import { gunYaz, telefonYaz } from "./bicim";
 import { saatYaz, type Randevu } from "./saat";
 import { fiyatYaz, type Salon } from "./salon";
@@ -55,4 +61,52 @@ export async function iptalBildir(salon: Salon, r: Randevu): Promise<void> {
   const m = iptalPostasi(bilgiCikar(salon, r));
   const sonuc = await epostaGonder({ kime: salon.eposta!, ...m });
   if (!sonuc.tamam) console.warn("[bildirim] iptal gönderilemedi:", sonuc.sebep);
+}
+
+/** Müşteri randevusunu başka bir saate taşıdığında. */
+export async function erteleBildir(salon: Salon, eski: Randevu, yeni: Randevu): Promise<void> {
+  if (!bildirimAcikMi(salon)) return;
+
+  const m = ertelePostasi(bilgiCikar(salon, yeni), {
+    gun: gunYaz(eski.gun),
+    saat: saatYaz(eski.baslangic),
+  });
+  const sonuc = await epostaGonder({ kime: salon.eposta!, ...m });
+  if (!sonuc.tamam) console.warn("[bildirim] erteleme gönderilemedi:", sonuc.sebep);
+}
+
+/** Ertesi günün randevularını salona özet geçer (günlük hatırlatma). */
+export async function gunlukOzetBildir(
+  salon: Salon,
+  gun: string,
+  randevular: Randevu[]
+): Promise<boolean> {
+  if (!bildirimAcikMi(salon)) return false;
+
+  const sirali = [...randevular].sort((a, b) => a.baslangic - b.baslangic);
+  const satirlar = sirali.map((r) => {
+    const hizmetler = salon.hizmetler
+      .filter((h) => r.hizmetIds.includes(h.id))
+      .map((h) => h.ad)
+      .join(", ");
+    const kisi = salon.personel.find((p) => p.id === r.personelId)?.ad;
+    return {
+      saat: saatYaz(r.baslangic),
+      musteri: r.ad,
+      telefon: telefonYaz(r.telefon),
+      hizmetler,
+      kisi,
+    };
+  });
+
+  const m = gunlukOzetPostasi({
+    salonAdi: salon.ad,
+    gun: gunYaz(gun),
+    satirlar,
+    panelAdresi: `${siteKoku()}/panel/bugun?g=${gun}`,
+  });
+
+  const sonuc = await epostaGonder({ kime: salon.eposta!, ...m });
+  if (!sonuc.tamam) console.warn("[bildirim] günlük özet gönderilemedi:", sonuc.sebep);
+  return sonuc.tamam;
 }

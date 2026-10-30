@@ -10,7 +10,8 @@ PANEL_SECRET=uzun-rastgele-bir-metin # oturum çerezini imzalar
 PANEL_SIFRE=salon1234                # yeni salonun ilk şifresi
 SITE_URL=https://salonkolay.com      # kanonik adres (sitemap, iptal bağlantıları)
 RESEND_API_KEY=re_...                # randevu bildirim e-postaları
-EPOSTA_GONDEREN=Salonkolay <bildirim@send.medya333.com>
+EPOSTA_GONDEREN=Salonkolay <bildirim@medya333.com>
+CRON_SECRET=uzun-rastgele-bir-metin   # gunluk hatirlatma yolunu korur
 ```
 
 `SITE_URL` boşsa Vercel'in verdiği adres kullanılır; yerelde localhost'a düşer.
@@ -89,6 +90,36 @@ Panel → **Ayarlar → Randevu bildirimleri** → adresi yazıp kaydedin, sonra
 Ücretsiz plan: ayda 3.000, **günde 100** e-posta, 3 alan adı. Bir randevu iki
 posta üretebilir (yeni randevu + iptal), yani günde ~50 randevu sonrası sınır
 sıkışır. 20-25 salona çıkıldığında ücretli plana geçmek gerekir.
+
+## Günlük hatırlatma
+
+Her akşam salona ertesi günün randevu listesi gider. Kuaför sabah paneli
+açmadan ne olduğunu bilir.
+
+Zamanlama `vercel.json` içinde: `0 17 * * *`. Vercel cron'ları **UTC**
+çalışır, yani Türkiye saatiyle **20:00**. Değiştirecekseniz üç saat geri
+hesaplayın.
+
+`CRON_SECRET` tanımlı değilse yol **kapalıdır** — açıkta bırakmaktansa hiç
+çalışmasın. Vercel cron isteği `authorization: Bearer <CRON_SECRET>`
+başlığıyla gelir; aynı değişkeni Vercel'de tanımlayın.
+
+Denemek için (kendi makinenizde ya da canlıda):
+
+```
+curl -H "authorization: Bearer $CRON_SECRET" \
+     "https://salonkolay.vercel.app/api/hatirlat?gun=2026-11-02"
+```
+
+`?gun=` olmadan ertesi günü alır. Dönen JSON kaç salona posta gittiğini
+söyler; adresi olmayan ya da gönderimi kapalı salon sayılmaz.
+
+**Müşteriye hatırlatma göndermiyoruz.** Randevu alırken e-posta adresi
+istemiyoruz — form uzadıkça randevu yarıda bırakılıyor — SMS de paralı.
+Onun yerine onay ekranında "Takvime ekle" bağlantısı var: randevu
+müşterinin kendi takvimine yazılıyor, biri bir gün önce biri bir saat önce
+olmak üzere iki hatırlatmayla. Hatırlatmayı müşterinin kendi telefonu
+yapıyor, bize hiçbir şeye mal olmuyor.
 
 ## Yeni salon ekleme
 

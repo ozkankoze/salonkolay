@@ -161,6 +161,37 @@ export function iptalPostasi(b: RandevuBilgisi): Mesaj {
   };
 }
 
+/** Müşteri randevusunu başka bir saate taşıdığında. */
+export function ertelePostasi(b: RandevuBilgisi, eski: { gun: string; saat: string }): Mesaj {
+  const l: [string, string][] = [["Eski saat", `${eski.gun} · ${eski.saat}`], ...satirlar(b)];
+  const vurgu = `${b.gun} · ${b.saat}`;
+  return {
+    konu: `Saat değişti: ${b.gun} ${b.saat} — ${b.musteri}`,
+    html: kabuk("Müşteri randevusunu başka bir saate taşıdı", vurgu, l, b.panelAdresi),
+    metin: duzMetin(`${b.salonAdi} — randevu saati değişti`, l, b.panelAdresi),
+  };
+}
+
+/** Ertesi günün randevu listesi — her akşam salona gider. */
+export function gunlukOzetPostasi(o: {
+  salonAdi: string;
+  gun: string;
+  satirlar: { saat: string; musteri: string; telefon: string; hizmetler: string; kisi?: string }[];
+  panelAdresi: string;
+}): Mesaj {
+  const adet = o.satirlar.length;
+  const liste: [string, string][] = o.satirlar.map((r) => [
+    r.saat,
+    [r.musteri, r.hizmetler, r.kisi, r.telefon].filter(Boolean).join(" · "),
+  ]);
+
+  return {
+    konu: `Yarın ${adet} randevunuz var — ${o.gun}`,
+    html: kabuk("Yarının programı", `${o.gun} · ${adet} randevu`, liste, o.panelAdresi),
+    metin: duzMetin(`${o.salonAdi} — yarın ${adet} randevu (${o.gun})`, liste, o.panelAdresi),
+  };
+}
+
 export function denemePostasi(salonAdi: string, panelAdresi: string): Mesaj {
   const l: [string, string][] = [
     ["Salon", salonAdi],

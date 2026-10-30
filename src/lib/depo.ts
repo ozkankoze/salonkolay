@@ -172,6 +172,34 @@ export async function durumDegistir(
   await sorgu(`update randevular set durum = $3 where salon = $1 and id = $2`, [salon, id, durum]);
 }
 
+/**
+ * Randevunun gününü ve saatini değiştirir (erteleme).
+ *
+ * Personel değişmiyor: müşteri saati kaydırırken "kimden" seçimini de
+ * yeniden yapmak zorunda kalmasın. Çakışma kontrolü çağıran tarafta.
+ */
+export async function randevuErtele(
+  salon: string,
+  id: string,
+  gun: string,
+  baslangic: number
+): Promise<void> {
+  if (!pgVarMi()) {
+    const r = bellekRandevu.find((x) => x.id === id && x.salon === salon);
+    if (r) {
+      r.gun = gun;
+      r.baslangic = baslangic;
+    }
+    return;
+  }
+  await sorgu(`update randevular set gun = $3, baslangic = $4 where salon = $1 and id = $2`, [
+    salon,
+    id,
+    gun,
+    baslangic,
+  ]);
+}
+
 export async function randevuBul(salon: string, id: string): Promise<Randevu | undefined> {
   if (!pgVarMi()) return bellekRandevu.find((x) => x.id === id && x.salon === salon);
   const satirlar = await sorgu<RandevuSatir>(

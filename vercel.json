@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/hatirlat",
+      "schedule": "0 17 * * *"
+    }
+  ]
+}
