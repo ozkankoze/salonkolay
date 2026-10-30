@@ -37,16 +37,23 @@ export default async function RandevuSayfasi({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ dil?: string }>;
+  searchParams: Promise<{ dil?: string; h?: string }>;
 }) {
   const { slug } = await params;
-  const { dil: adresDili } = await searchParams;
+  const { dil: adresDili, h } = await searchParams;
   const s = await salonGetir(slug);
   if (!s) notFound();
 
   const dil = dilSec(adresDili, (await cookies()).get(DIL_CEREZI)?.value, s.ingilizce);
   const t = sozluk(dil);
   const yol = (a: string) => dilliAdres(a, dil);
+
+  // Adresten gelen hizmet kimlikleri doğrulanmadan kullanılmaz:
+  // salonda olmayan bir kimlik akışı bozardı.
+  const onSecili = (h ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x) => s.hizmetler.some((hz) => hz.id === x));
 
   return (
     <div lang={dil} className="min-h-dvh" style={{ background: s.zemin }}>
@@ -113,7 +120,7 @@ export default async function RandevuSayfasi({
         </p>
 
         <div className="mt-8">
-          <Randevu salon={s} dil={dil} t={t} />
+          <Randevu salon={s} dil={dil} t={t} onSecili={onSecili} />
         </div>
 
         {s.demo ? (

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import type { Salon } from "@/lib/salon";
 import { cumleCoz, eksikler } from "@/lib/sesCoz";
 import { elleRandevuEylem } from "../eylemler";
+import { simdiTR } from "@/lib/zaman";
 
 /* ───────── tarayıcının ses tanıma arayüzü (tip tanımı) ───────── */
 
@@ -92,7 +93,7 @@ export default function ElleRandevu({ gun, salon }: { gun: string; salon: Salon 
    */
   const uygula = (metin: string) => {
     setCumle(metin);
-    const c = cumleCoz(metin, salon, new Date(), gun);
+    const c = cumleCoz(metin, salon, simdiTR(), gun);
     setAd(c.ad ?? "");
     setTarih(c.gun ?? gun);
     setSaat(c.saat ?? "");

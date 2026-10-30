@@ -7,6 +7,7 @@
  */
 
 import type { Calisma, Salon } from "./salon";
+import { anTR, simdiTR } from "./zaman";
 
 export type Randevu = {
   id: string;
@@ -91,7 +92,7 @@ export function musaitSaatler(
   toplamDk: number,
   personelId: string,
   mevcut: Randevu[],
-  simdi: Date = new Date(),
+  simdi: Date = simdiTR(),
   kapaliklar: KapaliAralik[] = []
 ): string[] {
   const d = anahtarGun(gun);
@@ -170,4 +171,51 @@ export function personelSec(
     if (yerUygunMu(salon, gun, baslangic, toplamDk, p.id, mevcut, kapaliklar)) return p.id;
   }
   return null;
+}
+
+/* ───────────────── salonun o anki durumu ───────────────── */
+
+export type Durum =
+  | { acik: true; kapanis: string }
+  | { acik: false; sonraki?: { haftaGunu: number; acilis: string } };
+
+/**
+ * Salon şu an açık mı?
+ *
+ * "Şu an" Türkiye saatine göredir (bkz. `zaman.ts`), ziyaretçinin
+ * telefonunun saatine göre değil: İstanbul'daki salon, Londra'daki
+ * turistin saatine göre açılıp kapanmaz.
+ *
+ * Kapalıysa bir sonraki açılışı da verir; ziyaretçi "ne zaman
+ * açılıyor" diye aramasın.
+ */
+export function salonDurumu(salon: Salon, an = anTR()): Durum {
+  const bugunku = salon.calisma.find((c) => c.gun === an.haftaGunu);
+
+  if (bugunku && !bugunku.kapali) {
+    const acilis = dkCevir(bugunku.acilis);
+    const kapanis = dkCevir(bugunku.kapanis);
+    if (an.gunIciDk >= acilis && an.gunIciDk < kapanis)
+      return { acik: true, kapanis: bugunku.kapanis };
+
+    // Gün içindeyiz ama henüz açılmamış.
+    if (an.gunIciDk < acilis)
+      return { acik: false, sonraki: { haftaGunu: an.haftaGunu, acilis: bugunku.acilis } };
+  }
+
+  // Bugün kapandı ya da kapalı: ileriye doğru ilk açık günü ara.
+  for (let i = 1; i <= 7; i++) {
+    const g = (an.haftaGunu + i) % 7;
+    const c = salon.calisma.find((x) => x.gun === g);
+    if (c && !c.kapali) return { acik: false, sonraki: { haftaGunu: g, acilis: c.acilis } };
+  }
+  return { acik: false };
+}
+
+/** Yorumlardan hesaplanan puan ortalaması ve yorum sayısı. */
+export function puanOrtalamasi(salon: Salon): { puan: number; adet: number } | null {
+  const y = salon.yorumlar?.filter((x) => typeof x.puan === "number" && x.puan > 0);
+  if (!y?.length) return null;
+  const toplam = y.reduce((t, x) => t + x.puan, 0);
+  return { puan: Math.round((toplam / y.length) * 10) / 10, adet: y.length };
 }

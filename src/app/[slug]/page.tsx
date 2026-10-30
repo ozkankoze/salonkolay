@@ -2,18 +2,24 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { hizmetGruplari } from "@/lib/salon";
+import { hizmetGruplari, type Salon } from "@/lib/salon";
+import { puanOrtalamasi, salonDurumu, type Durum } from "@/lib/saat";
+import { anTR } from "@/lib/zaman";
 import { cookies } from "next/headers";
 import {
   DIL_CEREZI,
   dilSec,
+  doldur,
   dilliAdres,
   fiyatYazDil,
   sec,
   sozluk,
   sureYazDil,
+  type Dil,
+  type Sozluk,
 } from "@/lib/dil";
 import DilDugmesi from "../DilDugmesi";
+import HizmetSecimi from "./HizmetSecimi";
 import { salonGetir } from "@/lib/salonVeri";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +64,10 @@ export default async function SalonSitesi({
   const t = sozluk(dil);
   const yol = (a: string) => dilliAdres(a, dil);
 
-  const bugun = new Date().getDay();
+  const an = anTR();
+  const bugun = an.haftaGunu;
+  const durum = salonDurumu(s, an);
+  const puan = puanOrtalamasi(s);
   const gruplar = hizmetGruplari(s, dil === "en");
   const stil = {
     "--renk": s.renk,
@@ -68,7 +77,11 @@ export default async function SalonSitesi({
   } as React.CSSProperties;
 
   return (
-    <div lang={dil} style={{ ...stil, background: "var(--zemin)", color: "var(--koyu)" }}>
+    <div
+      lang={dil}
+      className="pb-[92px] md:pb-0"
+      style={{ ...stil, background: "var(--zemin)", color: "var(--koyu)" }}
+    >
       {/* ═══════ üst çubuk ═══════ */}
       <header className="sticky top-0 z-40 border-b border-black/[.07] backdrop-blur-md" style={{ background: `${s.zemin}e6` }}>
         <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-5">
@@ -88,7 +101,7 @@ export default async function SalonSitesi({
             {s.ingilizce && <DilDugmesi dil={dil} renk={s.renk} koyu={s.koyu} />}
             <Link
               href={yol(`/${s.slug}/randevu`)}
-              className="rounded-full px-5 py-2.5 text-[15px] font-semibold text-white"
+              className="hidden rounded-full px-5 py-2.5 text-[15px] font-semibold text-white md:inline-block"
               style={{ background: "var(--koyu)" }}
             >
               {t.randevuAl}
@@ -98,75 +111,49 @@ export default async function SalonSitesi({
       </header>
 
       {/* ═══════ hero ═══════ */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-[1120px] items-center gap-10 px-5 py-14 md:grid-cols-2 md:py-20">
-          <div>
-            {s.logo && (
-              <Image
-                src={s.logo}
-                alt={s.ad}
-                width={200}
-                height={200}
-                priority
-                className="mb-6 h-32 w-32 object-contain md:h-40 md:w-40"
+      <section className="relative">
+        {/*
+          Kapak artık yarım sütun değil, sayfanın tamamını kaplıyor:
+          salonun kendi mekânı ilk görülen şey olsun. Metin üstüne
+          geldiği için fotoğrafın üzerine koyu bir geçiş seriyoruz,
+          yoksa açık fotoğraflarda yazı okunmuyor.
+        */}
+        {s.kapak ? (
+          <div className="relative min-h-[560px] md:min-h-[620px]">
+            <Image
+              src={s.kapak}
+              alt={`${s.ad} — ${sec(s.slogan, s.sloganEn, dil) ?? ""}`}
+              fill
+              priority
+              quality={90}
+              sizes="100vw"
+              className="object-cover"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,.52) 0%, rgba(0,0,0,.30) 38%, rgba(0,0,0,.72) 100%)",
+              }}
+            />
+            <div className="relative mx-auto flex min-h-[560px] max-w-[1120px] flex-col justify-end px-5 pt-16 pb-12 text-white md:min-h-[620px] md:pb-16">
+              <HeroIcerik
+                s={s}
+                t={t}
+                dil={dil}
+                durum={durum}
+                puan={puan}
+                yol={yol}
+                beyaz
               />
-            )}
-            <h1 className="text-[42px] leading-[1.05] font-semibold tracking-[-0.035em] md:text-[56px]">
-              {t.heroUst}
-              <br />
-              <span style={{ color: "var(--renk)" }}>{t.heroAlt}</span>
-            </h1>
-            <p className="mt-5 max-w-[46ch] text-[17px] leading-[1.65] opacity-75">
-              {t.heroAciklama} {sec(s.slogan, s.sloganEn, dil)}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link
-                href={yol(`/${s.slug}/randevu`)}
-                className="rounded-full px-7 py-4 text-[16px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(0,0,0,.6)]"
-                style={{ background: "var(--koyu)" }}
-              >
-                {t.randevuAl}
-              </Link>
-              <a
-                href={`https://wa.me/${s.telefon}`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border px-6 py-4 text-[16px] font-medium"
-                style={{ borderColor: "rgba(0,0,0,.14)" }}
-              >
-                {t.whatsapp}
-              </a>
             </div>
-
-            {s.rakamlar && (
-              <div className="mt-10 flex gap-8">
-                {s.rakamlar.map((r) => (
-                  <div key={r.etiket}>
-                    <div className="text-[26px] font-semibold" style={{ color: "var(--renk)" }}>
-                      {r.sayi}
-                    </div>
-                    <div className="text-[13.5px] opacity-60">{sec(r.etiket, r.etiketEn, dil)}</div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-
-          {s.kapak && (
-            <div className="relative">
-              <div className="overflow-hidden rounded-[28px] shadow-[0_40px_80px_-40px_rgba(0,0,0,.5)]">
-                <Image
-                  src={s.kapak}
-                  alt={`${s.ad} salon`}
-                  width={1200}
-                  height={800}
-                  priority
-                  className="h-[320px] w-full object-cover md:h-[460px]"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="mx-auto max-w-[1120px] px-5 py-16">
+            <HeroIcerik s={s} t={t} dil={dil} durum={durum} puan={puan} yol={yol} />
+          </div>
+        )}
       </section>
 
       {/* ═══════ hakkında ═══════ */}
@@ -205,46 +192,16 @@ export default async function SalonSitesi({
         </div>
         <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.hizmetler}</h2>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          {gruplar.map((g) => (
-            <div key={g.grup} className="rounded-[22px] p-6" style={{ background: "var(--acik)" }}>
-              <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">{g.baslik}</h3>
-              <ul className="mt-3">
-                {g.hizmetler.map((h) => (
-                  <li
-                    key={h.id}
-                    className="flex items-baseline gap-4 border-b border-black/[.07] py-3.5 last:border-0"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[16.5px] font-medium">{sec(h.ad, h.adEn, dil)}</div>
-                      <div className="mt-0.5 text-[13.5px] opacity-55">
-                        {sureYazDil(h.dakika, dil)}
-                        {h.aciklama ? ` · ${sec(h.aciklama, h.aciklamaEn, dil)}` : ""}
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-[16px] font-semibold">
-                      {fiyatYazDil(h.fiyat, dil) ?? (
-                        <span className="text-[13.5px] font-normal opacity-55">
-                          {t.salondaBelirlenir}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 text-center">
-          <Link
-            href={yol(`/${s.slug}/randevu`)}
-            className="inline-block rounded-full px-8 py-4 text-[16px] font-semibold text-white"
-            style={{ background: "var(--koyu)" }}
-          >
-            {t.saatSecRandevuAl}
-          </Link>
-        </div>
+        <HizmetSecimi
+          gruplar={gruplar}
+          slug={s.slug}
+          telefon={s.telefon}
+          dil={dil}
+          t={t}
+          renk={s.renk}
+          koyu={s.koyu}
+          acikZemin={s.acikZemin}
+        />
       </section>
 
       {/* ═══════ ekip ═══════ */}
@@ -458,28 +415,159 @@ export default async function SalonSitesi({
       </footer>
 
       {/* ═══════ mobil sabit çubuk ═══════ */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[.07] px-4 py-3 backdrop-blur md:hidden"
-        style={{ background: `${s.zemin}f2` }}
-      >
-        <div className="mx-auto flex max-w-[560px] gap-2">
-          <Link
-            href={yol(`/${s.slug}/randevu`)}
-            className="flex-1 rounded-xl py-3.5 text-center text-[16px] font-semibold text-white"
-            style={{ background: "var(--koyu)" }}
+      
+    </div>
+  );
+}
+
+/* ═══════════════ kahraman bölümünün içeriği ═══════════════ */
+
+/**
+ * Kapak fotoğrafı varsa onun üstünde beyaz, yoksa normal zeminde
+ * koyu renkle çizilir. İki hâl için iki ayrı blok yazmak yerine
+ * renkleri `beyaz` bayrağı belirliyor.
+ */
+function HeroIcerik({
+  s,
+  t,
+  dil,
+  durum,
+  puan,
+  yol,
+  beyaz = false,
+}: {
+  s: Salon;
+  t: Sozluk;
+  dil: Dil;
+  durum: Durum;
+  puan: { puan: number; adet: number } | null;
+  yol: (a: string) => string;
+  beyaz?: boolean;
+}) {
+  const solgun = beyaz ? "opacity-85" : "opacity-70";
+
+  return (
+    <>
+      <div className="flex items-center gap-4">
+        {s.logo && (
+          <span
+            className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-2xl p-2 md:h-[84px] md:w-[84px]"
+            style={{ background: beyaz ? "rgba(255,255,255,.92)" : "var(--acik)" }}
           >
-            {t.randevuAl}
-          </Link>
-          <a
-            href={`tel:+${s.telefon}`}
-            className="rounded-xl border px-5 py-3.5 text-[15px] font-medium"
-            style={{ borderColor: "rgba(0,0,0,.14)" }}
-          >
-            {t.ara}
-          </a>
+            <Image
+              src={s.logo}
+              alt={s.ad}
+              width={160}
+              height={160}
+              priority
+              className="h-full w-full object-contain"
+            />
+          </span>
+        )}
+        <div className="min-w-0">
+          <h1 className="text-[32px] leading-[1.05] font-semibold tracking-[-0.03em] md:text-[46px]">
+            {s.ad}
+          </h1>
+          {s.adres && (
+            <p className={`mt-1.5 flex items-center gap-1.5 text-[14.5px] md:text-[16px] ${solgun}`}>
+              <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z" strokeLinejoin="round" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+              <span className="truncate">{s.adres}</span>
+            </p>
+          )}
         </div>
       </div>
-      <div className="h-20 md:hidden" />
-    </div>
+
+      {/* durum ve puan */}
+      <div className="mt-5 flex flex-wrap items-center gap-2.5">
+        <DurumRozeti durum={durum} t={t} dil={dil} beyaz={beyaz} />
+        {puan && (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13.5px] font-medium"
+            style={{
+              background: beyaz ? "rgba(255,255,255,.16)" : "var(--acik)",
+              border: beyaz ? "1px solid rgba(255,255,255,.26)" : "1px solid rgba(0,0,0,.08)",
+            }}
+          >
+            <span aria-hidden style={{ color: beyaz ? "#FFD36E" : "var(--renk)" }}>
+              ★
+            </span>
+            <b>{puan.puan.toLocaleString(dil === "en" ? "en-US" : "tr-TR")}</b>
+            <span className={solgun}>
+              · {puan.adet} {t.yorumAdet}
+            </span>
+          </span>
+        )}
+      </div>
+
+      <p className={`mt-5 max-w-[48ch] text-[16.5px] leading-[1.6] md:text-[18px] ${solgun}`}>
+        {sec(s.slogan, s.sloganEn, dil) ?? t.heroAciklama}
+      </p>
+
+      <div className="mt-7 flex flex-wrap items-center gap-3">
+        <Link
+          href={yol(`/${s.slug}/randevu`)}
+          className="rounded-full px-8 py-4 text-[16.5px] font-semibold shadow-[0_18px_38px_-16px_rgba(0,0,0,.75)]"
+          style={{
+            background: beyaz ? "#fff" : "var(--koyu)",
+            color: beyaz ? "var(--koyu)" : "#fff",
+          }}
+        >
+          {t.randevuAl}
+        </Link>
+        <a
+          href={`https://wa.me/${s.telefon}`}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-full border px-6 py-4 text-[16px] font-medium"
+          style={{
+            borderColor: beyaz ? "rgba(255,255,255,.45)" : "rgba(0,0,0,.14)",
+            color: beyaz ? "#fff" : "inherit",
+          }}
+        >
+          {t.whatsapp}
+        </a>
+      </div>
+    </>
+  );
+}
+
+function DurumRozeti({
+  durum,
+  t,
+  dil,
+  beyaz,
+}: {
+  durum: Durum;
+  t: Sozluk;
+  dil: Dil;
+  beyaz: boolean;
+}) {
+  const yazi = durum.acik
+    ? doldur(t.kapanisaKadar, { saat: durum.kapanis })
+    : durum.sonraki
+      ? doldur(t.acilisBilgisi, {
+          gun: t.gunler[durum.sonraki.haftaGunu],
+          saat: durum.sonraki.acilis,
+        })
+      : "";
+
+  const nokta = durum.acik ? "#2BA86A" : "#C2544F";
+
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13.5px] font-medium"
+      style={{
+        background: beyaz ? "rgba(255,255,255,.16)" : "var(--acik)",
+        border: beyaz ? "1px solid rgba(255,255,255,.26)" : "1px solid rgba(0,0,0,.08)",
+      }}
+      lang={dil}
+    >
+      <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: nokta }} />
+      <b>{durum.acik ? t.suAnAcik : t.suAnKapali}</b>
+      {yazi && <span className={beyaz ? "opacity-85" : "opacity-65"}>· {yazi}</span>}
+    </span>
   );
 }

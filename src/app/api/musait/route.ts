@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { salonGetir } from "@/lib/salonVeri";
 import { musaitSaatler } from "@/lib/saat";
+import { simdiTR } from "@/lib/zaman";
 import { salonunKapaliklari, salonunRandevulari } from "@/lib/depo";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,6 @@ export async function GET(istek: Request) {
     salonunRandevulari(slug),
     salonunKapaliklari(slug),
   ]);
-  const saatler = musaitSaatler(salon, gun, dk, personel, mevcut, new Date(), kapaliklar);
+  const saatler = musaitSaatler(salon, gun, dk, personel, mevcut, simdiTR(), kapaliklar);
   return NextResponse.json({ saatler });
 }

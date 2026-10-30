@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { type Salon } from "@/lib/salon";
+import { simdiTR } from "@/lib/zaman";
 import {
   doldur,
   gunYazDil,
@@ -25,14 +26,19 @@ export default function Randevu({
   salon,
   dil,
   t,
+  onSecili = [],
 }: {
   salon: Salon;
   dil: Dil;
   t: Sozluk;
+  /** Salon sayfasından seçilip adresle taşınan hizmetler (?h=). */
+  onSecili?: string[];
 }) {
   const yol = (a: string) => dilliAdres(a, dil);
-  const [adim, setAdim] = useState<Adim>(1);
-  const [secili, setSecili] = useState<string[]>([]);
+  // Hizmetini sayfada seçtiyse ilk adımı tekrar göstermenin anlamı yok;
+  // doğrudan uzman seçimine geçiyoruz.
+  const [adim, setAdim] = useState<Adim>(onSecili.length ? 2 : 1);
+  const [secili, setSecili] = useState<string[]>(onSecili);
   const [personel, setPersonel] = useState("farketmez");
   const [gun, setGun] = useState("");
   const [saat, setSaat] = useState("");
@@ -63,7 +69,7 @@ export default function Randevu({
 
   const gunler = useMemo(() => {
     const liste: { anahtar: string; d: Date; kapali: boolean }[] = [];
-    const bas = new Date();
+    const bas = simdiTR(); // ziyaretçinin telefonu başka bölgede olabilir
     for (let i = 0; i < salon.ufukGun; i++) {
       const d = new Date(bas.getFullYear(), bas.getMonth(), bas.getDate() + i);
       const c = salon.calisma.find((x) => x.gun === d.getDay());

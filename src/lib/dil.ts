@@ -66,6 +66,23 @@ const TR = {
   skDescription:
     "Müşteriniz saatini kendi seçsin, randevu size düşsün. Instagram bio'nuza koyacağınız randevu sayfası.",
 
+  // ilk ekran durumu
+  suAnAcik: "Şu an açık",
+  suAnKapali: "Şu an kapalı",
+  kapanisaKadar: "{saat}'e kadar",
+  acilisBilgisi: "{gun} {saat}'te açılıyor",
+  yorumAdet: "yorum",
+  puanEtiketi: "müşteri puanı",
+
+  // hizmet seçimi
+  hizmetSec: "Seç",
+  hizmetSecildi: "Seçildi",
+  secimTemizle: "Seçimi temizle",
+  birHizmetSecildi: "1 hizmet seçildi",
+  cokHizmetSecildi: "{n} hizmet seçildi",
+  secerekDevam: "Seçtiklerinle devam et",
+  hizmetSecmeIpucu: "Hizmetleri buradan seçip doğrudan saat seçmeye geçebilirsiniz.",
+
   // salon sitesi
   menuHizmetler: "Hizmetler",
   menuEkip: "Ekip",
@@ -218,6 +235,21 @@ const EN: Sozluk = {
   skTitle: "Salonkolay — a booking page for your salon",
   skDescription:
     "Let your clients pick their own time and have the booking land with you. A booking page for your Instagram bio.",
+
+  suAnAcik: "Open now",
+  suAnKapali: "Closed now",
+  kapanisaKadar: "until {saat}",
+  acilisBilgisi: "opens {gun} at {saat}",
+  yorumAdet: "reviews",
+  puanEtiketi: "guest rating",
+
+  hizmetSec: "Select",
+  hizmetSecildi: "Selected",
+  secimTemizle: "Clear selection",
+  birHizmetSecildi: "1 service selected",
+  cokHizmetSecildi: "{n} services selected",
+  secerekDevam: "Continue with your selection",
+  hizmetSecmeIpucu: "Pick your services here and go straight to choosing a time.",
 
   menuHizmetler: "Services",
   menuEkip: "Team",

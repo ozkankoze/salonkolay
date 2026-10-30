@@ -1,6 +1,7 @@
 /** Panelde kullanılan küçük biçimlendirme yardımcıları. */
 
 import { anahtarGun, gunAnahtar } from "./saat";
+import { bugunTR } from "./zaman";
 
 const AY = [
   "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
@@ -21,7 +22,8 @@ export function kisaGun(gun: string): string {
 }
 
 export function bugunAnahtar(): string {
-  return gunAnahtar(new Date());
+  // Sunucu UTC'de; "bugün" Türkiye'nin bugünü olmalı.
+  return bugunTR();
 }
 
 /** gun + n gün */
