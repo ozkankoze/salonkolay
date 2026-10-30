@@ -435,7 +435,7 @@ export default async function SalonSitesi({
             <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">{t.iletisim}</h3>
             {s.adres && <p className="mt-4 text-[16px] leading-[1.6]">{s.adres}</p>}
             <div className="mt-5 space-y-2.5 text-[16px]">
-              <a href={`tel:+${s.telefon}`} className="block font-medium">
+              <a href={`tel:+${s.telefon}`} className="-my-1 block py-1 font-medium">
                 +{s.telefon.replace(/^(\d{2})(\d{3})(\d{3})(\d{2})(\d{2})$/, "$1 $2 $3 $4 $5")}
               </a>
               {s.instagram && (
@@ -443,7 +443,7 @@ export default async function SalonSitesi({
                   href={`https://instagram.com/${s.instagram}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="block opacity-70"
+                  className="-my-1 block py-1 opacity-70"
                 >
                   @{s.instagram}
                 </a>

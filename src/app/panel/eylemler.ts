@@ -23,6 +23,7 @@ import {
   salonunRandevulari,
 } from "@/lib/depo";
 import { dkCevir, personelSec, yerUygunMu, type Randevu } from "@/lib/saat";
+import { gunKaydir } from "@/lib/bicim";
 import { gorselKaydet, gorselSil, type GorselTuru } from "@/lib/gorsel";
 import { denemePostasi, epostaGonder, epostaKuruluMu, gecerliEposta } from "@/lib/eposta";
 import { siteKoku } from "@/lib/site";
@@ -109,6 +110,51 @@ export async function kapaliEkleEylem(veri: FormData): Promise<void> {
     await kapaliEkle({ salon: slug, gun, baslangic: b, bitis: s, sebep });
   }
   tazele();
+}
+
+/**
+ * Birkaç günlük izin / tatil.
+ *
+ * Tek tek gün kapatmak yerine aralık veriliyor; her gün için tüm gün
+ * kapalı kaydı açılır. Zaten tüm günü kapalı olan günler atlanır,
+ * aynı gün iki kez kapanmasın.
+ */
+const EN_UZUN_IZIN = 90;
+
+export async function izinEkleEylem(
+  _onceki: string | null,
+  veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const bas = String(veri.get("bas") ?? "");
+  const bit = String(veri.get("bit") ?? "");
+  const sebep = String(veri.get("sebep") ?? "").slice(0, 80) || undefined;
+
+  const bicim = /^\d{4}-\d{2}-\d{2}$/;
+  if (!bicim.test(bas) || !bicim.test(bit)) return "Tarihleri seçin.";
+  if (bit < bas) return "Bitiş tarihi başlangıçtan önce olamaz.";
+
+  const mevcut = await salonunKapaliklari(slug);
+  const zatenKapali = new Set(
+    mevcut.filter((k) => k.baslangic === null).map((k) => k.gun)
+  );
+
+  let gun = bas;
+  let adet = 0;
+  for (let i = 0; i <= EN_UZUN_IZIN; i++) {
+    if (gun > bit) break;
+    if (!zatenKapali.has(gun)) {
+      await kapaliEkle({ salon: slug, gun, baslangic: null, bitis: null, sebep });
+      adet++;
+    }
+    gun = gunKaydir(gun, 1);
+  }
+
+  if (gun <= bit) return `En fazla ${EN_UZUN_IZIN} günlük izin girilebilir.`;
+  if (adet === 0) return "Bu günler zaten kapalı görünüyor.";
+
+  tazele();
+  return "tamam";
 }
 
 export async function kapaliSilEylem(veri: FormData): Promise<void> {

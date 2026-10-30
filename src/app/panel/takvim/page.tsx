@@ -5,6 +5,8 @@ import { calismaBul, anahtarGun, saatYaz } from "@/lib/saat";
 import { bugunAnahtar, gunKaydir, gunYaz } from "@/lib/bicim";
 import Kabuk, { korunanSalon } from "../Kabuk";
 import { kapaliEkleEylem, kapaliSilEylem } from "../eylemler";
+import { Ay, Hafta, gunKapaliMi, type GunBilgi } from "./Gorunumler";
+import IzinFormu from "./IzinFormu";
 import ElleRandevu from "./ElleRandevu";
 
 export const dynamic = "force-dynamic";
@@ -12,20 +14,42 @@ export const dynamic = "force-dynamic";
 export default async function Takvim({
   searchParams,
 }: {
-  searchParams: Promise<{ g?: string }>;
+  searchParams: Promise<{ g?: string; v?: string }>;
 }) {
   const salon = await korunanSalon();
   const sp = await searchParams;
   const bugun = bugunAnahtar();
   const gun = /^\d{4}-\d{2}-\d{2}$/.test(sp.g ?? "") ? sp.g! : bugun;
+  const gorunum: "gun" | "hafta" | "ay" =
+    sp.v === "hafta" || sp.v === "ay" ? sp.v : "gun";
 
   const gunler = Array.from({ length: salon.ufukGun }, (_, i) => gunKaydir(bugun, i));
-  const son = gunler[gunler.length - 1];
+
+  // Hafta ve ay görünümleri gün şeridinden daha geniş bir aralık ister;
+  // tek sorguda hepsini çekip aşağıda bölüyoruz.
+  const { ilk: araBas, son: araSon } = araligiSec(gorunum, gun, bugun, gunler);
 
   const [randevular, kapaliklar] = await Promise.all([
-    araliktakiRandevular(salon.slug, bugun, son),
+    araliktakiRandevular(salon.slug, araBas, araSon),
     salonunKapaliklari(salon.slug),
   ]);
+
+  const tumGunKapali = new Set(
+    kapaliklar.filter((k) => k.baslangic === null).map((k) => k.gun)
+  );
+
+  /** Bir aralığı görünümlerin beklediği biçime çevirir. */
+  const gunleriTopla = (bas: string, adet: number): GunBilgi[] =>
+    Array.from({ length: adet }, (_, i) => {
+      const g = gunKaydir(bas, i);
+      return {
+        gun: g,
+        randevular: randevular
+          .filter((r) => r.gun === g && r.durum !== "iptal")
+          .sort((a, b) => a.baslangic - b.baslangic),
+        kapali: gunKapaliMi(salon, g, tumGunKapali),
+      };
+    });
 
   const sayac = new Map<string, number>();
   for (const r of randevular) {
@@ -42,7 +66,48 @@ export default async function Takvim({
 
   return (
     <Kabuk salon={salon} aktif="/panel/takvim" baslik="Takvim">
+      {/* görünüm seçici */}
+      <div className="mb-5 inline-flex rounded-xl border border-cizgi p-1">
+        {([
+          ["gun", "Gün"],
+          ["hafta", "Hafta"],
+          ["ay", "Ay"],
+        ] as const).map(([v, etiket]) => (
+          <Link
+            key={v}
+            href={`/panel/takvim?v=${v}&g=${gun}`}
+            className={`rounded-lg px-4 py-2 text-[14.5px] font-medium ${
+              gorunum === v ? "bg-ana text-white" : "text-gri"
+            }`}
+          >
+            {etiket}
+          </Link>
+        ))}
+      </div>
+
+      {gorunum === "hafta" && (
+        <div className="mb-6">
+          <Hafta
+            salon={salon}
+            baslangic={haftaBasi(gun)}
+            gunler={gunleriTopla(haftaBasi(gun), 7)}
+            secili={gun}
+          />
+        </div>
+      )}
+
+      {gorunum === "ay" && (
+        <div className="mb-6">
+          <Ay
+            ayOneki={gun.slice(0, 7)}
+            gunler={gunleriTopla(`${gun.slice(0, 7)}-01`, ayGunSayisi(gun))}
+            secili={gun}
+          />
+        </div>
+      )}
+
       {/* gün şeridi */}
+      {gorunum === "gun" && (
       <div className="serit -mx-5 mb-6 flex gap-2 overflow-x-auto px-5 pb-1">
         {gunler.map((g) => {
           const d = anahtarGun(g);
@@ -73,6 +138,7 @@ export default async function Takvim({
           );
         })}
       </div>
+      )}
 
       <h2 className="mb-3 text-[19px] font-semibold tracking-[-0.02em]">{gunYaz(gun)}</h2>
 
@@ -143,6 +209,8 @@ export default async function Takvim({
       <div className="space-y-3">
         <ElleRandevu gun={gun} salon={salon} />
 
+        <IzinFormu gun={gun} />
+
         {/* saat kapatma */}
         <details className="rounded-3xl border border-cizgi bg-kart p-5">
           <summary className="cursor-pointer list-none text-[15px] font-medium text-ana">
@@ -204,4 +272,41 @@ export default async function Takvim({
       </div>
     </Kabuk>
   );
+}
+
+
+/* ───────────── yardımcılar ───────────── */
+
+/** Pazartesiye yaslanmış hafta başı. */
+function haftaBasi(gun: string): string {
+  const d = anahtarGun(gun);
+  return gunKaydir(gun, -((d.getDay() + 6) % 7));
+}
+
+function ayGunSayisi(gun: string): number {
+  const [y, a] = gun.split("-").map(Number);
+  return new Date(y, a, 0).getDate();
+}
+
+/** Görünümün ihtiyaç duyduğu tarih aralığı. */
+function araligiSec(
+  gorunum: "gun" | "hafta" | "ay",
+  gun: string,
+  bugun: string,
+  seritGunleri: string[]
+): { ilk: string; son: string } {
+  if (gorunum === "hafta") {
+    const bas = haftaBasi(gun);
+    return { ilk: bas, son: gunKaydir(bas, 6) };
+  }
+  if (gorunum === "ay") {
+    const bas = `${gun.slice(0, 7)}-01`;
+    return { ilk: bas, son: gunKaydir(bas, ayGunSayisi(gun) - 1) };
+  }
+  // Gün görünümü: şerit aralığı, ama seçili gün dışarıda kalmasın.
+  const seritSon = seritGunleri[seritGunleri.length - 1];
+  return {
+    ilk: gun < bugun ? gun : bugun,
+    son: gun > seritSon ? gun : seritSon,
+  };
 }

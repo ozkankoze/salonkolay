@@ -66,7 +66,15 @@ export default function ElleRandevu({ gun, salon }: { gun: string; salon: Salon 
   const [anlasilan, setAnlasilan] = useState<string[]>([]);
   const tanima = useRef<Tanima | null>(null);
 
-  const destekli = useMemo(() => tanimaYapiciAl() !== null, []);
+  /**
+   * Ses tanıma desteği yalnız tarayıcıda bilinebiliyor. Çizim sırasında
+   * sorulursa sunucu "yok", tarayıcı "var" diyor ve React hidrasyonda
+   * uyuşmazlık hatası veriyordu. Bu yüzden ilk çizimde desteksiz
+   * sayıp bağlandıktan sonra açıyoruz: sunucu ve tarayıcı aynı HTML'i
+   * üretiyor, mikrofon bir an sonra beliriyor.
+   */
+  const [destekli, setDestekli] = useState(false);
+  useEffect(() => setDestekli(tanimaYapiciAl() !== null), []);
 
   const temizle = () => {
     setAd(""); setTelefon(""); setSaat(""); setPersonel("farketmez");
