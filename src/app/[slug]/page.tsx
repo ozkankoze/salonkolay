@@ -2,33 +2,64 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { GUN_ADI, fiyatYaz, hizmetGruplari, sureYaz } from "@/lib/salon";
+import { hizmetGruplari } from "@/lib/salon";
+import { cookies } from "next/headers";
+import {
+  DIL_CEREZI,
+  dilSec,
+  dilliAdres,
+  fiyatYazDil,
+  sec,
+  sozluk,
+  sureYazDil,
+} from "@/lib/dil";
+import DilDugmesi from "../DilDugmesi";
 import { salonGetir } from "@/lib/salonVeri";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ dil?: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const { dil: adresDili } = await searchParams;
   const s = await salonGetir(slug);
   if (!s) return {};
+
+  const dil = dilSec(adresDili, (await cookies()).get(DIL_CEREZI)?.value, s.ingilizce);
+  const t = sozluk(dil);
+  const slogan = sec(s.slogan, s.sloganEn, dil);
+  const hakkinda = sec(s.hakkinda, s.hakkindaEn, dil);
+
   return {
-    title: `${s.ad} — ${s.slogan ?? "Randevu"}`,
-    description: s.hakkinda?.slice(0, 155),
-    openGraph: { title: s.ad, description: s.slogan, images: s.kapak ? [s.kapak] : undefined },
+    title: `${s.ad} — ${slogan ?? t.basRandevu}`,
+    description: hakkinda?.slice(0, 155),
+    openGraph: { title: s.ad, description: slogan, images: s.kapak ? [s.kapak] : undefined },
   };
 }
 
-export default async function SalonSitesi({ params }: { params: Promise<{ slug: string }> }) {
+export default async function SalonSitesi({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ dil?: string }>;
+}) {
   const { slug } = await params;
+  const { dil: adresDili } = await searchParams;
   const s = await salonGetir(slug);
   if (!s) notFound();
 
+  const dil = dilSec(adresDili, (await cookies()).get(DIL_CEREZI)?.value, s.ingilizce);
+  const t = sozluk(dil);
+  const yol = (a: string) => dilliAdres(a, dil);
+
   const bugun = new Date().getDay();
-  const gruplar = hizmetGruplari(s);
+  const gruplar = hizmetGruplari(s, dil === "en");
   const stil = {
     "--renk": s.renk,
     "--koyu": s.koyu,
@@ -37,7 +68,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
   } as React.CSSProperties;
 
   return (
-    <div style={{ ...stil, background: "var(--zemin)", color: "var(--koyu)" }}>
+    <div lang={dil} style={{ ...stil, background: "var(--zemin)", color: "var(--koyu)" }}>
       {/* ═══════ üst çubuk ═══════ */}
       <header className="sticky top-0 z-40 border-b border-black/[.07] backdrop-blur-md" style={{ background: `${s.zemin}e6` }}>
         <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-5">
@@ -48,18 +79,21 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
             <span className="text-[18px] font-semibold tracking-[-0.01em]">{s.ad}</span>
           </Link>
           <nav className="hidden items-center gap-7 text-[15px] md:flex">
-            <a href="#hizmetler" className="opacity-70 transition-opacity hover:opacity-100">Hizmetler</a>
-            <a href="#ekip" className="opacity-70 transition-opacity hover:opacity-100">Ekip</a>
-            <a href="#galeri" className="opacity-70 transition-opacity hover:opacity-100">Galeri</a>
-            <a href="#iletisim" className="opacity-70 transition-opacity hover:opacity-100">İletişim</a>
+            <a href="#hizmetler" className="opacity-70 transition-opacity hover:opacity-100">{t.menuHizmetler}</a>
+            <a href="#ekip" className="opacity-70 transition-opacity hover:opacity-100">{t.menuEkip}</a>
+            <a href="#galeri" className="opacity-70 transition-opacity hover:opacity-100">{t.menuGaleri}</a>
+            <a href="#iletisim" className="opacity-70 transition-opacity hover:opacity-100">{t.menuIletisim}</a>
           </nav>
-          <Link
-            href={`/${s.slug}/randevu`}
-            className="rounded-full px-5 py-2.5 text-[15px] font-semibold text-white"
-            style={{ background: "var(--koyu)" }}
-          >
-            Randevu al
-          </Link>
+          <div className="flex items-center gap-2">
+            {s.ingilizce && <DilDugmesi dil={dil} renk={s.renk} koyu={s.koyu} />}
+            <Link
+              href={yol(`/${s.slug}/randevu`)}
+              className="rounded-full px-5 py-2.5 text-[15px] font-semibold text-white"
+              style={{ background: "var(--koyu)" }}
+            >
+              {t.randevuAl}
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -78,20 +112,20 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
               />
             )}
             <h1 className="text-[42px] leading-[1.05] font-semibold tracking-[-0.035em] md:text-[56px]">
-              Saçınıza
+              {t.heroUst}
               <br />
-              <span style={{ color: "var(--renk)" }}>uyanı yapıyoruz.</span>
+              <span style={{ color: "var(--renk)" }}>{t.heroAlt}</span>
             </h1>
             <p className="mt-5 max-w-[46ch] text-[17px] leading-[1.65] opacity-75">
-              Kesim, renk ve bakım. {s.slogan}
+              {t.heroAciklama} {sec(s.slogan, s.sloganEn, dil)}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                href={`/${s.slug}/randevu`}
+                href={yol(`/${s.slug}/randevu`)}
                 className="rounded-full px-7 py-4 text-[16px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(0,0,0,.6)]"
                 style={{ background: "var(--koyu)" }}
               >
-                Randevu al
+                {t.randevuAl}
               </Link>
               <a
                 href={`https://wa.me/${s.telefon}`}
@@ -100,7 +134,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                 className="rounded-full border px-6 py-4 text-[16px] font-medium"
                 style={{ borderColor: "rgba(0,0,0,.14)" }}
               >
-                WhatsApp
+                {t.whatsapp}
               </a>
             </div>
 
@@ -111,7 +145,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                     <div className="text-[26px] font-semibold" style={{ color: "var(--renk)" }}>
                       {r.sayi}
                     </div>
-                    <div className="text-[13.5px] opacity-60">{r.etiket}</div>
+                    <div className="text-[13.5px] opacity-60">{sec(r.etiket, r.etiketEn, dil)}</div>
                   </div>
                 ))}
               </div>
@@ -144,12 +178,12 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
           >
             <div>
               <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
-                Hakkımızda
+                {t.hakkimizda}
               </div>
               <h2 className="mt-3 text-[30px] leading-[1.12] font-semibold tracking-[-0.025em] md:text-[36px]">
-                {s.hakkindaBaslik}
+                {sec(s.hakkindaBaslik, s.hakkindaBaslikEn, dil)}
               </h2>
-              <p className="mt-4 text-[16.5px] leading-[1.7] opacity-75">{s.hakkinda}</p>
+              <p className="mt-4 text-[16.5px] leading-[1.7] opacity-75">{sec(s.hakkinda, s.hakkindaEn, dil)}</p>
             </div>
             {s.galeri?.[0] && (
               <Image
@@ -167,14 +201,14 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
       {/* ═══════ hizmetler ═══════ */}
       <section id="hizmetler" className="mx-auto max-w-[1120px] px-5 py-10">
         <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
-          Fiyat listesi
+          {t.fiyatListesi}
         </div>
-        <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">Hizmetler</h2>
+        <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.hizmetler}</h2>
 
         <div className="mt-8 grid gap-5 md:grid-cols-2">
           {gruplar.map((g) => (
             <div key={g.grup} className="rounded-[22px] p-6" style={{ background: "var(--acik)" }}>
-              <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">{g.grup}</h3>
+              <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">{g.baslik}</h3>
               <ul className="mt-3">
                 {g.hizmetler.map((h) => (
                   <li
@@ -182,15 +216,17 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                     className="flex items-baseline gap-4 border-b border-black/[.07] py-3.5 last:border-0"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="text-[16.5px] font-medium">{h.ad}</div>
+                      <div className="text-[16.5px] font-medium">{sec(h.ad, h.adEn, dil)}</div>
                       <div className="mt-0.5 text-[13.5px] opacity-55">
-                        {sureYaz(h.dakika)}
-                        {h.aciklama ? ` · ${h.aciklama}` : ""}
+                        {sureYazDil(h.dakika, dil)}
+                        {h.aciklama ? ` · ${sec(h.aciklama, h.aciklamaEn, dil)}` : ""}
                       </div>
                     </div>
                     <div className="shrink-0 text-[16px] font-semibold">
-                      {fiyatYaz(h.fiyat) ?? (
-                        <span className="text-[13.5px] font-normal opacity-55">Salonda belirlenir</span>
+                      {fiyatYazDil(h.fiyat, dil) ?? (
+                        <span className="text-[13.5px] font-normal opacity-55">
+                          {t.salondaBelirlenir}
+                        </span>
                       )}
                     </div>
                   </li>
@@ -202,11 +238,11 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
 
         <div className="mt-8 text-center">
           <Link
-            href={`/${s.slug}/randevu`}
+            href={yol(`/${s.slug}/randevu`)}
             className="inline-block rounded-full px-8 py-4 text-[16px] font-semibold text-white"
             style={{ background: "var(--koyu)" }}
           >
-            Saat seç, randevu al
+            {t.saatSecRandevuAl}
           </Link>
         </div>
       </section>
@@ -214,9 +250,9 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
       {/* ═══════ ekip ═══════ */}
       <section id="ekip" className="mx-auto max-w-[1120px] px-5 py-14">
         <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
-          Tanışalım
+          {t.tanisalim}
         </div>
-        <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">Ekibimiz</h2>
+        <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.ekibimiz}</h2>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
           {s.personel.map((p) => (
             <div key={p.id} className="rounded-[22px] p-7 text-center" style={{ background: "var(--acik)" }}>
@@ -246,7 +282,9 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                 </div>
               )}
               <div className="mt-4 text-[19px] font-semibold">{p.ad}</div>
-              {p.unvan && <div className="mt-1 text-[14px] opacity-60">{p.unvan}</div>}
+              {p.unvan && (
+                <div className="mt-1 text-[14px] opacity-60">{sec(p.unvan, p.unvanEn, dil)}</div>
+              )}
             </div>
           ))}
         </div>
@@ -256,9 +294,9 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
       {s.galeri && s.galeri.length > 1 && (
         <section id="galeri" className="mx-auto max-w-[1120px] px-5 py-10">
           <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
-            Salondan
+            {t.salondan}
           </div>
-          <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">Galeri</h2>
+          <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.galeri}</h2>
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3">
             {s.galeri.map((g, i) => (
               <Image
@@ -278,19 +316,21 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
       {s.yorumlar && (
         <section className="mx-auto max-w-[1120px] px-5 py-14">
           <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
-            Misafirlerimiz
+            {t.misafirlerimiz}
           </div>
-          <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">Ne diyorlar?</h2>
+          <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.neDiyorlar}</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {s.yorumlar.map((y) => (
               <div key={y.ad} className="rounded-[22px] p-7" style={{ background: "var(--acik)" }}>
                 <div className="text-[15px]" style={{ color: "var(--renk)" }}>
                   {"★".repeat(y.puan)}
                 </div>
-                <p className="mt-3 text-[15.5px] leading-[1.65] opacity-80">{y.metin}</p>
+                <p className="mt-3 text-[15.5px] leading-[1.65] opacity-80">{sec(y.metin, y.metinEn, dil)}</p>
                 <div className="mt-4 text-[14px] font-medium">
                   {y.ad}
-                  {y.tarih && <span className="ml-2 font-normal opacity-50">{y.tarih}</span>}
+                  {y.tarih && (
+                    <span className="ml-2 font-normal opacity-50">{sec(y.tarih, y.tarihEn, dil)}</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -302,7 +342,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
       <section id="iletisim" className="mx-auto max-w-[1120px] px-5 py-14">
         <div className="grid gap-5 md:grid-cols-2">
           <div className="rounded-[22px] p-8" style={{ background: "var(--acik)" }}>
-            <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">Çalışma saatleri</h3>
+            <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">{t.calismaSaatleri}</h3>
             <ul className="mt-4">
               {[1, 2, 3, 4, 5, 6, 0].map((g) => {
                 const c = s.calisma.find((x) => x.gun === g);
@@ -315,11 +355,11 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                     }`}
                   >
                     <span>
-                      {GUN_ADI[g]}
-                      {g === bugun && <span className="ml-2 text-[12px] opacity-50">bugün</span>}
+                      {t.gunler[g]}
+                      {g === bugun && <span className="ml-2 text-[12px] opacity-50">{t.bugun}</span>}
                     </span>
                     <span className={kapali ? "opacity-45" : ""}>
-                      {kapali ? "Kapalı" : `${c!.acilis} – ${c!.kapanis}`}
+                      {kapali ? t.kapali : `${c!.acilis} – ${c!.kapanis}`}
                     </span>
                   </li>
                 );
@@ -328,7 +368,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="rounded-[22px] p-8" style={{ background: "var(--acik)" }}>
-            <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">İletişim</h3>
+            <h3 className="text-[13px] font-semibold tracking-[0.16em] uppercase opacity-45">{t.iletisim}</h3>
             {s.adres && <p className="mt-4 text-[16px] leading-[1.6]">{s.adres}</p>}
             <div className="mt-5 space-y-2.5 text-[16px]">
               <a href={`tel:+${s.telefon}`} className="block font-medium">
@@ -353,7 +393,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                 className="rounded-full border px-5 py-3 text-[15px] font-medium"
                 style={{ borderColor: "rgba(0,0,0,.14)" }}
               >
-                Yol tarifi
+                {t.yolTarifi}
               </a>
               <a
                 href={`https://wa.me/${s.telefon}`}
@@ -362,7 +402,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
                 className="rounded-full px-5 py-3 text-[15px] font-semibold text-white"
                 style={{ background: "var(--renk)" }}
               >
-                WhatsApp
+                {t.whatsapp}
               </a>
             </div>
           </div>
@@ -376,17 +416,17 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
           style={{ background: "var(--koyu)" }}
         >
           <h2 className="text-[30px] leading-[1.15] font-semibold tracking-[-0.025em] md:text-[40px]">
-            Saatinizi şimdi ayırın.
+            {t.saatiniziAyirin}
           </h2>
           <p className="mx-auto mt-4 max-w-[46ch] text-[16.5px] leading-[1.6] opacity-70">
-            Hangi gün, kaçta ve kimden — üç adımda seçin. Telefonla uğraşmayın.
+            {t.saatiniziAciklama}
           </p>
           <Link
-            href={`/${s.slug}/randevu`}
+            href={yol(`/${s.slug}/randevu`)}
             className="mt-8 inline-block rounded-full px-9 py-4 text-[16px] font-semibold"
             style={{ background: "var(--renk)", color: "#fff" }}
           >
-            Randevu al
+            {t.randevuAl}
           </Link>
         </div>
       </section>
@@ -402,7 +442,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
               rel="noreferrer"
               className="text-[14px] opacity-55"
             >
-              Salonkolay ile hazırlandı
+              {t.salonkolayIle}
             </a>
           </div>
 
@@ -411,15 +451,7 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
               className="mt-6 rounded-2xl border border-dashed p-5 text-[13.5px] leading-[1.65] opacity-70"
               style={{ borderColor: "rgba(0,0,0,.2)" }}
             >
-              <b>Bu bir demo sayfadır.</b> Salon adı, adres, telefon, fiyatlar, ekip üyeleri,
-              yorumlar ve fotoğraflar örnek amaçlı hazırlanmıştır; gerçek bir işletmeye veya gerçek
-              kişilere ait değildir. Fotoğraflardaki mekânlar ve kişiler bu salonla ilgisizdir.
-              Sayfanın amacı, Salonkolay randevu sisteminin nasıl göründüğünü göstermektir.
-              <br />
-              <span className="opacity-80">
-                Fotoğraflar serbest lisanslı (telifsiz) arşivlerden alınmıştır; fotoğraflardaki
-                kişiler bu salonun çalışanı değildir.
-              </span>
+              <b>{t.demoBaslik}</b> {t.demoAciklama}
             </div>
           )}
         </div>
@@ -432,18 +464,18 @@ export default async function SalonSitesi({ params }: { params: Promise<{ slug: 
       >
         <div className="mx-auto flex max-w-[560px] gap-2">
           <Link
-            href={`/${s.slug}/randevu`}
+            href={yol(`/${s.slug}/randevu`)}
             className="flex-1 rounded-xl py-3.5 text-center text-[16px] font-semibold text-white"
             style={{ background: "var(--koyu)" }}
           >
-            Randevu al
+            {t.randevuAl}
           </Link>
           <a
             href={`tel:+${s.telefon}`}
             className="rounded-xl border px-5 py-3.5 text-[15px] font-medium"
             style={{ borderColor: "rgba(0,0,0,.14)" }}
           >
-            Ara
+            {t.ara}
           </a>
         </div>
       </div>

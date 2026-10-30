@@ -7,6 +7,7 @@ import { randevuImzaDogru } from "@/lib/sifre";
 import { anahtarGun } from "@/lib/saat";
 import { salonGetir } from "@/lib/salonVeri";
 import { iptalBildir } from "@/lib/bildirim";
+import { dilAyikla, sozluk } from "@/lib/dil";
 
 /**
  * Müşterinin kendi randevusunu iptal etmesi.
@@ -18,16 +19,17 @@ export async function iptalEylem(_onceki: string | null, veri: FormData): Promis
   const slug = String(veri.get("salon") ?? "");
   const id = String(veri.get("id") ?? "");
   const anahtar = String(veri.get("anahtar") ?? "");
+  const t = sozluk(dilAyikla(veri.get("dil")) ?? "tr");
 
-  if (!randevuImzaDogru(id, anahtar)) return "Bağlantı geçersiz.";
+  if (!randevuImzaDogru(id, anahtar)) return t.baglantiGecersiz;
 
   const r = await randevuBul(slug, id);
-  if (!r) return "Randevu bulunamadı.";
+  if (!r) return t.randevuBulunamadi;
   if (r.durum === "iptal") return "tamam";
 
   const an = anahtarGun(r.gun);
   an.setHours(Math.floor(r.baslangic / 60), r.baslangic % 60, 0, 0);
-  if (an.getTime() < Date.now()) return "Bu randevunun saati geçmiş. Salonu arayın.";
+  if (an.getTime() < Date.now()) return t.saatiGecmis;
 
   await durumDegistir(slug, id, "iptal");
 

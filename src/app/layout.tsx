@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { siteKoku } from "@/lib/site";
+import { DIL_CEREZI, dilAyikla } from "@/lib/dil";
 
 const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
@@ -21,9 +23,13 @@ export const metadata: Metadata = {
   openGraph: { type: "website", locale: "tr_TR", siteName: "Salonkolay" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Sayfanın dilini çerezden okuyoruz: ekran okuyucular ve tarayıcı
+  // çevirisi doğru dili görsün. Adresteki ?dil=en de çereze yazılıyor.
+  const dil = dilAyikla((await cookies()).get(DIL_CEREZI)?.value) ?? "tr";
+
   return (
-    <html lang="tr" className={outfit.variable}>
+    <html lang={dil} className={outfit.variable}>
       <body style={{ fontFamily: "var(--font-outfit), ui-sans-serif, system-ui" }}>{children}</body>
     </html>
   );

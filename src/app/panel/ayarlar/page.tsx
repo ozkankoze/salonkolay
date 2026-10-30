@@ -1,6 +1,13 @@
 import { telefonYaz } from "@/lib/bicim";
 import Kabuk, { korunanSalon } from "../Kabuk";
-import { BilgiFormu, EkipFormu, HizmetFormu, SaatFormu, SifreFormu } from "./Formlar";
+import {
+  BilgiFormu,
+  DilFormu,
+  EkipFormu,
+  HizmetFormu,
+  SaatFormu,
+  SifreFormu,
+} from "./Formlar";
 import FotoFormu from "./FotoFormu";
 import BildirimFormu from "./BildirimFormu";
 import { epostaKuruluMu } from "@/lib/eposta";
@@ -29,6 +36,16 @@ export default async function Ayarlar() {
         />
       </Bolum>
 
+      <Bolum baslik="İngilizce (dil eklentisi)">
+        <DilFormu
+          slug={salon.slug}
+          ingilizce={salon.ingilizce}
+          sloganEn={salon.sloganEn}
+          hakkindaBaslikEn={salon.hakkindaBaslikEn}
+          hakkindaEn={salon.hakkindaEn}
+        />
+      </Bolum>
+
       <Bolum baslik="Randevu bildirimleri">
         <BildirimFormu
           eposta={salon.eposta}
@@ -47,7 +64,7 @@ export default async function Ayarlar() {
       </Bolum>
 
       <Bolum baslik="Hizmetler ve fiyatlar">
-        <HizmetFormu baslangic={salon.hizmetler} />
+        <HizmetFormu baslangic={salon.hizmetler} ingilizce={salon.ingilizce} />
       </Bolum>
 
       <Bolum baslik="Çalışma saatleri">
@@ -55,7 +72,11 @@ export default async function Ayarlar() {
       </Bolum>
 
       <Bolum baslik="Ekip">
-        <EkipFormu baslangic={salon.personel} hizmetler={salon.hizmetler} />
+        <EkipFormu
+          baslangic={salon.personel}
+          hizmetler={salon.hizmetler}
+          ingilizce={salon.ingilizce}
+        />
       </Bolum>
 
       <Bolum baslik="Şifre">

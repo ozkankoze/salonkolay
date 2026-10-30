@@ -2,18 +2,35 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { GUN_ADI, fiyatYaz, sureYaz, type Salon } from "@/lib/salon";
-import { ONAY_CUMLESI } from "@/lib/kvkk";
+import { type Salon } from "@/lib/salon";
+import {
+  doldur,
+  gunYazDil,
+  sureYazDil,
+  fiyatYazDil,
+  dilliAdres,
+  sec,
+  type Dil,
+  type Sozluk,
+} from "@/lib/dil";
 
 type Adim = 1 | 2 | 3 | 4 | 5;
 
-const AY = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
 
 function gunAnahtar(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export default function Randevu({ salon }: { salon: Salon }) {
+export default function Randevu({
+  salon,
+  dil,
+  t,
+}: {
+  salon: Salon;
+  dil: Dil;
+  t: Sozluk;
+}) {
+  const yol = (a: string) => dilliAdres(a, dil);
   const [adim, setAdim] = useState<Adim>(1);
   const [secili, setSecili] = useState<string[]>([]);
   const [personel, setPersonel] = useState("farketmez");
@@ -86,10 +103,10 @@ export default function Randevu({ salon }: { salon: Salon }) {
 
   async function gonder() {
     setHata("");
-    if (ad.trim().length < 2) return setHata("Adınızı yazar mısınız?");
+    if (ad.trim().length < 2) return setHata(t.adiniziYazin);
     const temizTel = tel.replace(/\D/g, "");
-    if (temizTel.length < 10) return setHata("Telefon numarası eksik görünüyor.");
-    if (!onay) return setHata("Devam etmek için aydınlatma metnini onaylayın.");
+    if (temizTel.length < 10) return setHata(t.telefonEksik);
+    if (!onay) return setHata(t.onaylayin);
 
     setGonderiliyor(true);
     try {
@@ -111,7 +128,7 @@ export default function Randevu({ salon }: { salon: Salon }) {
       if (y.hata) setHata(y.hata);
       else setSonuc({ id: y.id, anahtar: y.anahtar });
     } catch {
-      setHata("Bağlantı kurulamadı. Tekrar dener misiniz?");
+      setHata(t.baglantiKurulamadi);
     } finally {
       setGonderiliyor(false);
     }
@@ -127,35 +144,35 @@ export default function Randevu({ salon }: { salon: Salon }) {
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-yumusak text-[26px]">
           ✓
         </div>
-        <h2 className="mt-4 text-[24px] font-semibold tracking-[-0.02em]">Randevunuz alındı</h2>
+        <h2 className="mt-4 text-[24px] font-semibold tracking-[-0.02em]">{t.randevunuzAlindi}</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-gri">
           {d && (
             <>
               <b className="text-murekkep">
-                {d.getDate()} {AY[d.getMonth()]} {GUN_ADI[d.getDay()]}
+                {gunYazDil(gun, dil)}
               </b>{" "}
-              saat <b className="text-murekkep">{saat}</b>
+              <b className="text-murekkep">{saat}</b>
             </>
           )}
           <br />
-          {hizmetler.map((h) => h.ad).join(", ")}
+          {hizmetler.map((h) => sec(h.ad, h.adEn, dil)).join(", ")}
         </p>
         <p className="mt-4 text-[14px] text-silik">
-          Salon onayladığında size haber verilecek.
+          {t.salonOnaylayinca}
         </p>
 
         {sonuc.anahtar && (
           <div className="mt-5 rounded-2xl bg-kagit p-4">
             <p className="text-[13.5px] leading-relaxed text-gri">
-              Randevunuzu görüntülemek veya <b className="text-murekkep">iptal etmek</b> için bu
-              bağlantıyı saklayın:
+              {t.baglantiyiSaklayin} <b className="text-murekkep">{t.iptalEtmek}</b>{" "}
+              {t.icinBaglanti}
             </p>
             <Link
-              href={`/${salon.slug}/randevu/${sonuc.id}?k=${sonuc.anahtar}`}
+              href={yol(`/${salon.slug}/randevu/${sonuc.id}?k=${sonuc.anahtar}`)}
               className="mt-2.5 block rounded-xl py-3 text-center text-[15px] font-semibold text-white"
               style={{ background: salon.koyu }}
             >
-              Randevumu görüntüle
+              {t.randevumuGoruntule}
             </Link>
             <button
               type="button"
@@ -168,27 +185,27 @@ export default function Randevu({ salon }: { salon: Salon }) {
               }}
               className="mt-2 w-full rounded-xl border border-cizgi py-2.5 text-[13.5px] font-medium"
             >
-              {kopyalandi ? "Bağlantı kopyalandı" : "Bağlantıyı kopyala"}
+              {kopyalandi ? t.baglantiKopyalandi : t.baglantiyiKopyala}
             </button>
           </div>
         )}
         <div className="mt-6 flex gap-2">
           <a
             href={`https://wa.me/${salon.telefon}?text=${encodeURIComponent(
-              `Merhaba, ${gun} ${saat} için randevu aldım. (${ad})`
+              doldur(t.waAldimMesaji, { gun, saat, ad })
             )}`}
             target="_blank"
             rel="noreferrer"
             className="flex-1 rounded-xl py-3.5 text-[15px] font-semibold text-white"
             style={{ background: R }}
           >
-            WhatsApp'tan yaz
+            {t.whatsapptanYaz}
           </a>
           <a
             href={`tel:+${salon.telefon}`}
             className="rounded-xl border border-cizgi px-5 py-3.5 text-[15px] font-medium"
           >
-            Ara
+            {t.ara}
           </a>
         </div>
       </div>
@@ -211,8 +228,8 @@ export default function Randevu({ salon }: { salon: Salon }) {
       {/* ——— 1 · hizmet ——— */}
       {adim === 1 && (
         <div className="gir">
-          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">Ne yaptıracaksınız?</h2>
-          <p className="mt-1 text-[14.5px] text-silik">Birden fazla seçebilirsiniz.</p>
+          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">{t.neYaptiracaksiniz}</h2>
+          <p className="mt-1 text-[14.5px] text-silik">{t.birdenFazla}</p>
           <ul className="mt-4 space-y-2">
             {salon.hizmetler.map((h) => {
               const aktif = secili.includes(h.id);
@@ -237,11 +254,11 @@ export default function Randevu({ salon }: { salon: Salon }) {
                       {aktif ? "✓" : ""}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[16px] font-medium">{h.ad}</span>
-                      <span className="block text-[13px] text-silik">{sureYaz(h.dakika)}</span>
+                      <span className="block text-[16px] font-medium">{sec(h.ad, h.adEn, dil)}</span>
+                      <span className="block text-[13px] text-silik">{sureYazDil(h.dakika, dil)}</span>
                     </span>
                     <span className="shrink-0 text-[15px] font-semibold">
-                      {fiyatYaz(h.fiyat) ?? <span className="text-[13px] font-normal text-silik">—</span>}
+                      {fiyatYazDil(h.fiyat, dil) ?? <span className="text-[13px] font-normal text-silik">—</span>}
                     </span>
                   </button>
                 </li>
@@ -249,9 +266,14 @@ export default function Randevu({ salon }: { salon: Salon }) {
             })}
           </ul>
           <Devam
+            etiket={t.devam}
             renk={R}
             kapali={secili.length === 0}
-            ozet={secili.length ? `${sureYaz(toplamDk)}${toplamFiyat ? ` · ${fiyatYaz(toplamFiyat)}` : ""}` : ""}
+            ozet={
+              secili.length
+                ? `${sureYazDil(toplamDk, dil)}${toplamFiyat ? ` · ${fiyatYazDil(toplamFiyat, dil)}` : ""}`
+                : ""
+            }
             onClick={() => setAdim(2)}
           />
         </div>
@@ -260,10 +282,10 @@ export default function Randevu({ salon }: { salon: Salon }) {
       {/* ——— 2 · personel ——— */}
       {adim === 2 && (
         <div className="gir">
-          <Geri onClick={() => setAdim(1)} />
-          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">Kimden alalım?</h2>
+          <Geri etiket={t.geri} onClick={() => setAdim(1)} />
+          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">{t.kimdenAlalim}</h2>
           <ul className="mt-4 space-y-2">
-            {[{ id: "farketmez", ad: "Farketmez", unvan: "En uygun saati gösterelim" }, ...uygunPersonel].map(
+            {[{ id: "farketmez", ad: t.farketmez, unvan: t.farketmezAciklama }, ...uygunPersonel].map(
               (p) => {
                 const aktif = personel === p.id;
                 return (
@@ -299,7 +321,9 @@ export default function Randevu({ salon }: { salon: Salon }) {
                       <span className="min-w-0 flex-1">
                         <span className="block text-[16px] font-medium">{p.ad}</span>
                         {"unvan" in p && p.unvan && (
-                          <span className="block text-[13px] text-silik">{p.unvan}</span>
+                          <span className="block text-[13px] text-silik">
+                            {sec(p.unvan, "unvanEn" in p ? p.unvanEn : undefined, dil)}
+                          </span>
                         )}
                       </span>
                     </button>
@@ -308,15 +332,15 @@ export default function Randevu({ salon }: { salon: Salon }) {
               }
             )}
           </ul>
-          <Devam renk={R} kapali={false} onClick={() => setAdim(3)} />
+          <Devam etiket={t.devam} renk={R} kapali={false} onClick={() => setAdim(3)} />
         </div>
       )}
 
       {/* ——— 3 · gün & saat ——— */}
       {adim === 3 && (
         <div className="gir">
-          <Geri onClick={() => setAdim(2)} />
-          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">Ne zaman?</h2>
+          <Geri etiket={t.geri} onClick={() => setAdim(2)} />
+          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">{t.neZaman}</h2>
 
           <div className="serit mt-4 flex gap-2 overflow-x-auto pb-1">
             {gunler.map((g) => {
@@ -334,16 +358,16 @@ export default function Randevu({ salon }: { salon: Salon }) {
                     color: aktif ? "#fff" : undefined,
                   }}
                 >
-                  <div className="text-[12px] opacity-70">{GUN_ADI[g.d.getDay()].slice(0, 3)}</div>
+                  <div className="text-[12px] opacity-70">{t.gunlerKisa[g.d.getDay()]}</div>
                   <div className="text-[19px] font-semibold leading-tight">{g.d.getDate()}</div>
-                  <div className="text-[11px] opacity-70">{AY[g.d.getMonth()]}</div>
+                  <div className="text-[11px] opacity-70">{t.aylarKisa[g.d.getMonth()]}</div>
                 </button>
               );
             })}
           </div>
 
           <div className="mt-5 min-h-[120px]">
-            {!gun && <p className="text-[14.5px] text-silik">Önce bir gün seçin.</p>}
+            {!gun && <p className="text-[14.5px] text-silik">{t.onceGunSecin}</p>}
             {gun && saatler === null && <p className="text-[14.5px] text-silik">Saatler getiriliyor…</p>}
             {gun && saatler && saatler.length === 0 && (
               <p className="text-[14.5px] text-silik">
@@ -374,36 +398,37 @@ export default function Randevu({ salon }: { salon: Salon }) {
             )}
           </div>
 
-          <Devam renk={R} kapali={!saat} onClick={() => setAdim(4)} />
+          <Devam etiket={t.devam} renk={R} kapali={!saat} onClick={() => setAdim(4)} />
         </div>
       )}
 
       {/* ——— 4 · bilgiler ——— */}
       {adim === 4 && (
         <div className="gir">
-          <Geri onClick={() => setAdim(3)} />
-          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">Son adım</h2>
+          <Geri etiket={t.geri} onClick={() => setAdim(3)} />
+          <h2 className="text-[21px] font-semibold tracking-[-0.02em]">{t.sonAdim}</h2>
 
           <div className="mt-4 rounded-2xl bg-yumusak px-4 py-3.5 text-[14.5px] leading-relaxed">
-            <b>{hizmetler.map((h) => h.ad).join(", ")}</b>
+            <b>{hizmetler.map((h) => sec(h.ad, h.adEn, dil)).join(", ")}</b>
             <br />
             {gun && (
               <>
-                {new Date(gun).getDate()} {AY[new Date(gun).getMonth()]}{" "}
-                {GUN_ADI[new Date(gun).getDay()]} · {saat}
+                {gunYazDil(gun, dil)} · {saat}
               </>
             )}
             <br />
             <span className="text-gri">
-              {sureYaz(toplamDk)}
-              {toplamFiyat ? ` · ${fiyatYaz(toplamFiyat)}` : " · fiyat salonda belirlenir"}
+              {sureYazDil(toplamDk, dil)}
+              {toplamFiyat
+                ? ` · ${fiyatYazDil(toplamFiyat, dil)}`
+                : ` · ${t.salondaBelirlenir}`}
             </span>
           </div>
 
           <div className="mt-4 space-y-3">
-            <Alan etiket="Adınız" deger={ad} degistir={setAd} tip="text" ornek="Ayşe Yılmaz" />
-            <Alan etiket="Telefon" deger={tel} degistir={setTel} tip="tel" ornek="05xx xxx xx xx" />
-            <Alan etiket="Not (isteğe bağlı)" deger={not} degistir={setNot} tip="text" ornek="Saçım uzun" />
+            <Alan etiket={t.adiniz} deger={ad} degistir={setAd} tip="text" ornek="Ayşe Yılmaz" />
+            <Alan etiket={t.telefon} deger={tel} degistir={setTel} tip="tel" ornek="05xx xxx xx xx" />
+            <Alan etiket={t.notIsteğeBagli} deger={not} degistir={setNot} tip="text" ornek="" />
           </div>
 
           <label className="mt-4 flex cursor-pointer items-start gap-3">
@@ -415,14 +440,14 @@ export default function Randevu({ salon }: { salon: Salon }) {
               style={{ accentColor: R }}
             />
             <span className="text-[13.5px] leading-relaxed text-gri">
-              {ONAY_CUMLESI}{" "}
+              {t.kvkkOnay}{" "}
               <Link
-                href={`/${salon.slug}/kvkk`}
+                href={yol(`/${salon.slug}/kvkk`)}
                 target="_blank"
                 className="font-medium underline underline-offset-2"
                 style={{ color: R }}
               >
-                Aydınlatma metni
+                {t.aydinlatmaMetni}
               </Link>
             </span>
           </label>
@@ -436,10 +461,10 @@ export default function Randevu({ salon }: { salon: Salon }) {
             className="mt-5 w-full rounded-xl py-4 text-[16px] font-semibold text-white disabled:opacity-60"
             style={{ background: R }}
           >
-            {gonderiliyor ? "Gönderiliyor…" : "Randevuyu tamamla"}
+            {gonderiliyor ? t.gonderiliyor : t.randevuyuTamamla}
           </button>
           <p className="mt-3 text-center text-[12.5px] leading-relaxed text-silik">
-            Numaranız yalnızca bu randevu için salona iletilir.
+            {t.numaraniz}
           </p>
         </div>
       )}
@@ -448,11 +473,13 @@ export default function Randevu({ salon }: { salon: Salon }) {
 }
 
 function Devam({
+  etiket,
   renk,
   kapali,
   ozet,
   onClick,
 }: {
+  etiket: string;
   renk: string;
   kapali: boolean;
   ozet?: string;
@@ -468,16 +495,16 @@ function Devam({
         className="w-full rounded-xl py-4 text-[16px] font-semibold text-white transition-opacity disabled:opacity-35"
         style={{ background: renk }}
       >
-        Devam
+        {etiket}
       </button>
     </div>
   );
 }
 
-function Geri({ onClick }: { onClick: () => void }) {
+function Geri({ onClick, etiket }: { onClick: () => void; etiket: string }) {
   return (
     <button type="button" onClick={onClick} className="mb-3 text-[14.5px] font-medium text-silik">
-      ← Geri
+      ← {etiket}
     </button>
   );
 }

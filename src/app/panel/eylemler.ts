@@ -262,6 +262,9 @@ export async function ayarKaydetEylem(
               : Number(h.fiyat),
           aciklama: h.aciklama ? String(h.aciklama).slice(0, 80) : undefined,
           grup: h.grup ? String(h.grup).slice(0, 40) : undefined,
+          adEn: h.adEn ? String(h.adEn).trim().slice(0, 60) || undefined : undefined,
+          aciklamaEn: h.aciklamaEn ? String(h.aciklamaEn).trim().slice(0, 80) || undefined : undefined,
+          grupEn: h.grupEn ? String(h.grupEn).trim().slice(0, 40) || undefined : undefined,
         });
       }
       if (temiz.length === 0) return "En az bir hizmet olmalı.";
@@ -283,6 +286,7 @@ export async function ayarKaydetEylem(
           id: String(p.id || "p" + Math.random().toString(36).slice(2, 7)),
           ad: adi,
           unvan: p.unvan ? String(p.unvan).slice(0, 60) : undefined,
+          unvanEn: p.unvanEn ? String(p.unvanEn).trim().slice(0, 60) || undefined : undefined,
           foto: p.foto ? String(p.foto).slice(0, 200) : undefined,
           hizmetler: Array.isArray(p.hizmetler) && p.hizmetler.length ? p.hizmetler.map(String) : undefined,
         });
@@ -429,6 +433,40 @@ export async function bildirimAyarEylem(
     bildirim: adres ? veri.get("bildirim") === "evet" : false,
   });
   tazele();
+  return "tamam";
+}
+
+/* ───────── dil eklentisi ───────── */
+
+/**
+ * İngilizce eklentisinin açma/kapama anahtarı ve salonun kendi
+ * metinlerinin İngilizce karşılıkları.
+ *
+ * Ayrı bir eylem: onay kutusu işaretsizken form verisine hiç girmiyor,
+ * `ayarKaydetEylem`in "alan geldiyse değiştir" mantığı bunu ayırt edemezdi.
+ */
+export async function dilAyarEylem(
+  _onceki: string | null,
+  veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return "Salon bulunamadı.";
+
+  const kes = (anahtar: string, uzunluk: number) =>
+    String(veri.get(anahtar) ?? "").trim().slice(0, uzunluk) || undefined;
+
+  await salonKaydet({
+    ...salon,
+    ingilizce: veri.get("ingilizce") === "evet",
+    sloganEn: kes("sloganEn", 120),
+    hakkindaBaslikEn: kes("hakkindaBaslikEn", 80),
+    hakkindaEn: kes("hakkindaEn", 800),
+  });
+
+  tazele();
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/randevu`);
   return "tamam";
 }
 

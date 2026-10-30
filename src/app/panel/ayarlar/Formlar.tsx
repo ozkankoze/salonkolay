@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import type { Hizmet, Personel } from "@/lib/salon";
-import { ayarKaydetEylem, sifreEylem } from "../eylemler";
+import { ayarKaydetEylem, dilAyarEylem, sifreEylem } from "../eylemler";
 
 const giris =
   "w-full rounded-xl border border-cizgi bg-kagit px-3.5 py-3 outline-none placeholder:text-silik focus:border-ana";
@@ -94,9 +94,110 @@ function L({ e, children }: { e: string; children: React.ReactNode }) {
   );
 }
 
+/* ───────────── İngilizce dil eklentisi ───────────── */
+
+/** Açıldığında salonun sitesinde EN/TR düğmesi görünür. */
+export function DilFormu({
+  ingilizce,
+  sloganEn,
+  hakkindaBaslikEn,
+  hakkindaEn,
+  slug,
+}: {
+  ingilizce?: boolean;
+  sloganEn?: string;
+  hakkindaBaslikEn?: string;
+  hakkindaEn?: string;
+  slug: string;
+}) {
+  const [durum, gonder, bekliyor] = useActionState(dilAyarEylem, null);
+  const [acik, setAcik] = useState(Boolean(ingilizce));
+
+  // Kayıttan sonra sunucu yeni değeri gönderir; anahtar kayıtlı durumu
+  // göstersin, ekranda kalmış eski seçimi değil.
+  useEffect(() => setAcik(Boolean(ingilizce)), [ingilizce]);
+
+  return (
+    <form action={gonder}>
+      <label className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          name="ingilizce"
+          value="evet"
+          checked={acik}
+          onChange={(e) => setAcik(e.target.checked)}
+          className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-[#b84a6e]"
+        />
+        <span>
+          <span className="block text-[15px] font-medium">İngilizce sayfa açık</span>
+          <span className="mt-0.5 block text-[13.5px] text-gri">
+            Sitenizin sağ üstünde <b className="text-murekkep">EN</b> düğmesi çıkar. Randevu akışı,
+            iptal sayfası ve KVKK metni hazır çevrilmiş — aşağıdaki alanlar yalnızca sizin kendi
+            yazdığınız metinler için.
+          </span>
+        </span>
+      </label>
+
+      <div className={acik ? "mt-4" : "mt-4 opacity-40"}>
+        <L e="Kısa tanıtım (İngilizce)">
+          <input
+            name="sloganEn"
+            defaultValue={sloganEn ?? ""}
+            disabled={!acik}
+            placeholder="Hair & Beauty · Kadıköy, İstanbul"
+            className={giris}
+          />
+        </L>
+        <L e="“Hakkımızda” başlığı (İngilizce)">
+          <input
+            name="hakkindaBaslikEn"
+            defaultValue={hakkindaBaslikEn ?? ""}
+            disabled={!acik}
+            placeholder="Ten years on the same street"
+            className={`${giris} mt-3`}
+          />
+        </L>
+        <L e="“Hakkımızda” yazısı (İngilizce)">
+          <textarea
+            name="hakkindaEn"
+            defaultValue={hakkindaEn ?? ""}
+            disabled={!acik}
+            rows={4}
+            className={`${giris} mt-3`}
+          />
+        </L>
+        <p className="mt-3 text-[13px] text-silik">
+          Boş bıraktığınız her alanda Türkçesi görünür — İngilizce sayfa yarım kalmaz. Hizmet
+          adlarının ve ünvanların İngilizcesini kendi bölümlerinde girebilirsiniz.
+        </p>
+      </div>
+
+      <Durum hata={durum} />
+      <Kaydet bekliyor={bekliyor} />
+
+      {acik && Boolean(ingilizce) && (
+        <a
+          href={`/${slug}?dil=en`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 ml-3 inline-block text-[14px] font-medium text-ana"
+        >
+          İngilizce sayfayı gör →
+        </a>
+      )}
+    </form>
+  );
+}
+
 /* ───────────── hizmetler ───────────── */
 
-export function HizmetFormu({ baslangic }: { baslangic: Hizmet[] }) {
+export function HizmetFormu({
+  baslangic,
+  ingilizce,
+}: {
+  baslangic: Hizmet[];
+  ingilizce?: boolean;
+}) {
   const [durum, gonder, bekliyor] = useActionState(ayarKaydetEylem, null);
   const [liste, setListe] = useState<Hizmet[]>(baslangic);
 
@@ -161,6 +262,41 @@ export function HizmetFormu({ baslangic }: { baslangic: Hizmet[] }) {
                 />
               </L>
             </div>
+
+            {ingilizce && (
+              <details className="mt-2.5">
+                <summary className="cursor-pointer text-[13.5px] text-gri">
+                  İngilizcesi{" "}
+                  <span className="text-silik">{h.adEn ? `(${h.adEn})` : "(girilmedi)"}</span>
+                </summary>
+                <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+                  <L e="Hizmet adı (EN)">
+                    <input
+                      value={h.adEn ?? ""}
+                      onChange={(e) => degistir(i, { adEn: e.target.value || undefined })}
+                      placeholder="Women's haircut"
+                      className={giris}
+                    />
+                  </L>
+                  <L e="Başlık (EN)">
+                    <input
+                      value={h.grupEn ?? ""}
+                      onChange={(e) => degistir(i, { grupEn: e.target.value || undefined })}
+                      placeholder="Hair, Colour, Care…"
+                      className={giris}
+                    />
+                  </L>
+                  <L e="Not (EN)">
+                    <input
+                      value={h.aciklamaEn ?? ""}
+                      onChange={(e) => degistir(i, { aciklamaEn: e.target.value || undefined })}
+                      className={giris}
+                    />
+                  </L>
+                </div>
+              </details>
+            )}
+
             <button
               type="button"
               onClick={() => setListe((o) => o.filter((_, j) => j !== i))}
@@ -201,9 +337,11 @@ export function HizmetFormu({ baslangic }: { baslangic: Hizmet[] }) {
 export function EkipFormu({
   baslangic,
   hizmetler,
+  ingilizce,
 }: {
   baslangic: Personel[];
   hizmetler: Hizmet[];
+  ingilizce?: boolean;
 }) {
   const [durum, gonder, bekliyor] = useActionState(ayarKaydetEylem, null);
   const [liste, setListe] = useState<Personel[]>(baslangic);
@@ -231,6 +369,14 @@ export function EkipFormu({
                 placeholder="Ünvanı (Renk uzmanı…)"
                 className={giris}
               />
+              {ingilizce && (
+                <input
+                  value={p.unvanEn ?? ""}
+                  onChange={(e) => degistir(i, { unvanEn: e.target.value || undefined })}
+                  placeholder="Ünvanı — İngilizcesi (Colour specialist…)"
+                  className={`${giris} sm:col-span-2`}
+                />
+              )}
             </div>
 
             <details className="mt-2.5">
