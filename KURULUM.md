@@ -9,6 +9,8 @@ DATABASE_URL=postgresql://...        # Neon bağlantı dizesi
 PANEL_SECRET=uzun-rastgele-bir-metin # oturum çerezini imzalar
 PANEL_SIFRE=salon1234                # yeni salonun ilk şifresi
 SITE_URL=https://salonkolay.com      # kanonik adres (sitemap, iptal bağlantıları)
+RESEND_API_KEY=re_...                # randevu bildirim e-postaları
+EPOSTA_GONDEREN=Salonkolay <bildirim@send.medya333.com>
 ```
 
 `SITE_URL` boşsa Vercel'in verdiği adres kullanılır; yerelde localhost'a düşer.
@@ -31,6 +33,62 @@ kullanılır ve bu güvenli değildir.
 
 Tablolar ilk istekte kendiliğinden oluşur (`src/lib/db.ts` içindeki `kur()`).
 Elle SQL çalıştırmanız gerekmez.
+
+## Resend (randevu bildirim e-postaları)
+
+Randevu geldiğinde salona, müşteri iptal ettiğinde yine salona e-posta gider.
+Gönderim **hiçbir koşulda randevuyu bozmaz**: anahtar yoksa ya da Resend cevap
+vermezse randevu yine oluşur, sunucu kaydına bir satır düşer.
+
+### 1. Alan adını doğrulayın
+
+Resend → **Domains → Add Domain** → `send.medya333.com`.
+
+Alt alan adı kullanmanın sebebi: `medya333.com` kökünde soğuk e-posta için
+kurulmuş SPF/DKIM var. Randevu postaları ayrı bir alt alandan giderse ikisinin
+itibarı birbirine karışmaz; birinden gelen şikâyet diğerini etkilemez.
+
+Resend üç kayıt ister. Kayıtları `medya333.com`'un DNS'ini yönettiğiniz yere
+girin (Vercel DNS ise **Auto Configure** düğmesi bunları kendi ekler):
+
+| Tür | Ad (host)                             | Değer                         |
+|-----|---------------------------------------|-------------------------------|
+| MX  | `send.send`                           | Resend'in verdiği, öncelik 10 |
+| TXT | `send.send`                           | `v=spf1 include:amazonses.com ~all` |
+| TXT | `resend._domainkey.send`              | Resend'in verdiği `p=…` dizesi |
+
+Ad sütunundaki değerler alan adı **olmadan** yazılır; sağlayıcı sonuna
+`.medya333.com` ekler. Yani kayıtlar `send.send.medya333.com` ve
+`resend._domainkey.send.medya333.com` olarak oluşur — iki kere "send" görmek
+doğrudur, Resend SPF'i her zaman `send.` ön ekine koyar.
+
+Kökteki mevcut DKIM kaydına dokunulmaz: Resend farklı bir seçici (`resend`)
+kullanır. Kökteki DMARC kaydı alt alanlar için de geçerlidir ve bu kayıtlar
+girildikten sonra hizalama sağlanır.
+
+### 2. API anahtarı
+
+Resend → **API Keys → Create API Key** → yetki *Sending access* yeter.
+Anahtar bir kere gösterilir. `RESEND_API_KEY` olarak Vercel'e girin.
+
+### 3. Gönderen adresi
+
+`EPOSTA_GONDEREN=Salonkolay <bildirim@send.medya333.com>`
+
+Tanımlı değilse kod Resend'in deneme adresine (`onboarding@resend.dev`) düşer.
+O adres **yalnızca kendi Resend hesap adresinize** mail gönderebilir; gerçek
+salonlara ulaşmaz. Denemeyi geçtikten sonra bu değişkeni mutlaka tanımlayın.
+
+### 4. Doğrulama
+
+Panel → **Ayarlar → Randevu bildirimleri** → adresi yazıp kaydedin, sonra
+**deneme gönder**. Gelmezse Resend → **Logs** ekranı sebebini yazar.
+
+### Sınırlar
+
+Ücretsiz plan: ayda 3.000, **günde 100** e-posta, 3 alan adı. Bir randevu iki
+posta üretebilir (yeni randevu + iptal), yani günde ~50 randevu sonrası sınır
+sıkışır. 20-25 salona çıkıldığında ücretli plana geçmek gerekir.
 
 ## Yeni salon ekleme
 
