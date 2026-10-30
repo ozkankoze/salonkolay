@@ -24,6 +24,8 @@ import {
 } from "@/lib/depo";
 import { dkCevir, personelSec, yerUygunMu, type Randevu } from "@/lib/saat";
 import { gorselKaydet, gorselSil, type GorselTuru } from "@/lib/gorsel";
+import { denemePostasi, epostaGonder, epostaKuruluMu, gecerliEposta } from "@/lib/eposta";
+import { siteKoku } from "@/lib/site";
 
 async function slugAl(): Promise<string> {
   const s = await oturumSlug();
@@ -232,6 +234,7 @@ export async function ayarKaydetEylem(
   const instagram = metin("instagram", 40);
   if (instagram !== undefined) yeni.instagram = instagram.replace(/^@/, "") || undefined;
 
+
   const telefon = veri.get("telefon");
   if (telefon !== null) {
     const t = String(telefon).replace(/\D/g, "");
@@ -405,4 +408,43 @@ export async function gorselSilEylem(veri: FormData): Promise<void> {
   await salonKaydet(yeni);
   tazele();
   revalidatePath(`/${slug}`);
+}
+
+/* ───────── bildirim ayarı ───────── */
+
+export async function bildirimAyarEylem(
+  _onceki: string | null,
+  veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return "Salon bulunamadı.";
+
+  const adres = String(veri.get("eposta") ?? "").trim().slice(0, 120);
+  if (adres && !gecerliEposta(adres)) return "E-posta adresi geçerli görünmüyor.";
+
+  await salonKaydet({
+    ...salon,
+    eposta: adres || undefined,
+    bildirim: adres ? veri.get("bildirim") === "evet" : false,
+  });
+  tazele();
+  return "tamam";
+}
+
+/** Ayarın gerçekten çalıştığını görmek için tek tuşluk deneme. */
+export async function denemePostasiEylem(
+  _onceki: string | null,
+  _veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return "Salon bulunamadı.";
+  if (!salon.eposta) return "Önce bir e-posta adresi yazıp kaydedin.";
+  if (!epostaKuruluMu())
+    return "E-posta gönderimi bu kurulumda açık değil (RESEND_API_KEY tanımlı değil).";
+
+  const m = denemePostasi(salon.ad, `${siteKoku()}/panel/bugun`);
+  const sonuc = await epostaGonder({ kime: salon.eposta, ...m });
+  return sonuc.tamam ? "tamam" : sonuc.sebep;
 }

@@ -69,6 +69,7 @@ export function BilgiFormu({
           <input name="instagram" defaultValue={instagram ?? ""} placeholder="pinarkuafor" className={giris} />
         </L>
       </div>
+
       <L e="Adres">
         <input name="adres" defaultValue={adres ?? ""} className={`${giris} mt-3`} />
       </L>

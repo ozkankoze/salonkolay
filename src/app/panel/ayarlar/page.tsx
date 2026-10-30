@@ -2,6 +2,8 @@ import { telefonYaz } from "@/lib/bicim";
 import Kabuk, { korunanSalon } from "../Kabuk";
 import { BilgiFormu, EkipFormu, HizmetFormu, SaatFormu, SifreFormu } from "./Formlar";
 import FotoFormu from "./FotoFormu";
+import BildirimFormu from "./BildirimFormu";
+import { epostaKuruluMu } from "@/lib/eposta";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,14 @@ export default async function Ayarlar() {
           telefon={telefonYaz(salon.telefon)}
           adres={salon.adres}
           instagram={salon.instagram}
+        />
+      </Bolum>
+
+      <Bolum baslik="Randevu bildirimleri">
+        <BildirimFormu
+          eposta={salon.eposta}
+          bildirim={salon.bildirim}
+          kurulu={epostaKuruluMu()}
         />
       </Bolum>
 

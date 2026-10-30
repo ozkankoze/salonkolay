@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { durumDegistir, randevuBul } from "@/lib/depo";
 import { randevuImzaDogru } from "@/lib/sifre";
 import { anahtarGun } from "@/lib/saat";
+import { salonGetir } from "@/lib/salonVeri";
+import { iptalBildir } from "@/lib/bildirim";
 
 /**
  * Müşterinin kendi randevusunu iptal etmesi.
@@ -27,6 +30,10 @@ export async function iptalEylem(_onceki: string | null, veri: FormData): Promis
   if (an.getTime() < Date.now()) return "Bu randevunun saati geçmiş. Salonu arayın.";
 
   await durumDegistir(slug, id, "iptal");
+
+  const salon = await salonGetir(slug);
+  if (salon) after(() => iptalBildir(salon, r));
+
   revalidatePath(`/${slug}/randevu/${id}`);
   return "tamam";
 }

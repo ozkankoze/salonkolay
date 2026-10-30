@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { salonGetir } from "@/lib/salonVeri";
 import { dkCevir, personelSec, yerUygunMu } from "@/lib/saat";
 import { randevuImza } from "@/lib/sifre";
+import { yeniRandevuBildir } from "@/lib/bildirim";
 import { randevuEkle, salonunKapaliklari, salonunRandevulari } from "@/lib/depo";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,10 @@ export async function POST(istek: Request) {
     telefon,
     not,
   });
+
+  // Bildirim yanıtı bekletmesin: müşteri onay ekranını hemen görsün,
+  // e-posta arkadan gitsin.
+  after(() => yeniRandevuBildir(salon, r));
 
   // Müşteri randevusunu bu anahtarla görüntüleyip iptal edebilir.
   return NextResponse.json({ id: r.id, personelId, anahtar: randevuImza(r.id) });

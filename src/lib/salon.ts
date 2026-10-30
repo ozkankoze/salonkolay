@@ -52,6 +52,10 @@ export type Salon = {
   hakkindaBaslik?: string;
   telefon: string; // 905xxxxxxxxx
   instagram?: string;
+  /** Randevu bildirimlerinin gideceği adres. */
+  eposta?: string;
+  /** Bildirim e-postası gönderilsin mi (varsayılan: adres varsa evet). */
+  bildirim?: boolean;
   adres?: string;
   haritaUrl?: string;
   haritaGomme?: string;
