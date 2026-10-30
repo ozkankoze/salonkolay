@@ -8,7 +8,12 @@
 DATABASE_URL=postgresql://...        # Neon bağlantı dizesi
 PANEL_SECRET=uzun-rastgele-bir-metin # oturum çerezini imzalar
 PANEL_SIFRE=salon1234                # yeni salonun ilk şifresi
+SITE_URL=https://salonkolay.com      # kanonik adres (sitemap, iptal bağlantıları)
 ```
+
+`SITE_URL` boşsa Vercel'in verdiği adres kullanılır; yerelde localhost'a düşer.
+Alan adı alındığında burayı güncelleyin, yoksa sitemap ve müşteriye giden
+iptal bağlantıları eski adresi gösterir.
 
 **DATABASE_URL yoksa** sistem bellekte çalışır: her şey görünür ve denenebilir,
 ama sunucu yeniden başlayınca randevular sıfırlanır. Demo için yeterli,
@@ -84,3 +89,40 @@ Denemeleri çalıştırmak için:
 ```
 npx tsx sesCoz.test.ts
 ```
+
+## Görseller
+
+Logo, kapak, galeri ve ekip fotoğrafları panelden yükleniyor (Ayarlar →
+Fotoğraflar). Vercel'in dosya sistemi yazılamadığı için görseller
+veritabanında `gorseller` tablosunda duruyor.
+
+Yüklenen dosya `sharp` ile küçültülüp webp'e çevriliyor: logo 600 px,
+kapak 1600 px, galeri 1400 px, ekip 800 px kare. Böylece her görsel
+100-250 KB bandında kalıyor; salon başına ~10 görsel, yani ~2 MB.
+
+Servis eden yol `/g/<id>.webp`. Adres içeriğe göre sabit olduğundan
+`cache-control: immutable` veriliyor — tarayıcı ve CDN bir kez indiriyor,
+veritabanına tekrar gidilmiyor. Görsel sayısı çok büyürse bu dosyayı bir
+nesne deposuna (Vercel Blob, S3) taşımak yeterli; çağıran taraflar değişmez.
+
+## KVKK
+
+Her salonun `/[slug]/kvkk` adresinde kendi bilgileriyle üretilen bir
+aydınlatma metni var. Randevu formunun son adımında onay kutusu zorunlu;
+onay gelmeden API kayıt açmıyor (istek doğrudan API'ye gelse bile).
+
+Metin `src/lib/kvkk.ts` içinde. **Bu bir şablondur, hukuki görüş değildir** —
+gerçek müşteriye satmadan önce bir avukata okutun. Özellikle saklama süresi
+ve yurt dışına aktarım bölümleri işletmeye göre değişir.
+
+## Randevu iptali
+
+Randevu alındığında müşteriye imzalı bir bağlantı veriliyor:
+`/[slug]/randevu/<id>?k=<imza>`. İmza, `PANEL_SECRET` ile üretilen bir
+HMAC; kimliği bilen biri bile imzasız randevuyu göremez veya iptal edemez.
+
+Geçmiş saatli randevular iptal edilemiyor. İptal edilen randevunun saati
+otomatik olarak yeniden müsait hâle geliyor.
+
+**Not:** `PANEL_SECRET` değişirse daha önce verilmiş iptal bağlantıları
+geçersiz olur (panel oturumları da kapanır).

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { salonGetir } from "@/lib/salonVeri";
 import { dkCevir, personelSec, yerUygunMu } from "@/lib/saat";
+import { randevuImza } from "@/lib/sifre";
 import { randevuEkle, salonunKapaliklari, salonunRandevulari } from "@/lib/depo";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,12 @@ export async function POST(istek: Request) {
   if (ad.length < 2) return NextResponse.json({ hata: "Adınızı yazar mısınız?" }, { status: 400 });
   if (telefon.length < 10)
     return NextResponse.json({ hata: "Telefon numarası eksik görünüyor." }, { status: 400 });
+  // KVKK onayı olmadan kayıt açılmaz — istek doğrudan API'ye gelse bile.
+  if (g.kvkk !== true)
+    return NextResponse.json(
+      { hata: "Devam etmek için aydınlatma metnini onaylayın." },
+      { status: 400 }
+    );
 
   const hizmetler = salon.hizmetler.filter((h) => hizmetIds.includes(h.id));
   if (hizmetler.length === 0)
@@ -70,5 +77,6 @@ export async function POST(istek: Request) {
     not,
   });
 
-  return NextResponse.json({ id: r.id, personelId });
+  // Müşteri randevusunu bu anahtarla görüntüleyip iptal edebilir.
+  return NextResponse.json({ id: r.id, personelId, anahtar: randevuImza(r.id) });
 }

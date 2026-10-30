@@ -23,6 +23,7 @@ import {
   salonunRandevulari,
 } from "@/lib/depo";
 import { dkCevir, personelSec, yerUygunMu, type Randevu } from "@/lib/saat";
+import { gorselKaydet, gorselSil, type GorselTuru } from "@/lib/gorsel";
 
 async function slugAl(): Promise<string> {
   const s = await oturumSlug();
@@ -321,4 +322,87 @@ export async function sifreEylem(_onceki: string | null, veri: FormData): Promis
     String(veri.get("yeni") ?? "")
   );
   return hata ?? "tamam";
+}
+
+/* ───────── görseller ───────── */
+
+const EN_COK_GALERI = 8;
+
+export async function gorselYukleEylem(
+  _onceki: string | null,
+  veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return "Salon bulunamadı.";
+
+  const tur = String(veri.get("tur") ?? "") as GorselTuru;
+  if (!["logo", "kapak", "galeri", "ekip"].includes(tur)) return "Görsel türü geçersiz.";
+
+  const dosya = veri.get("dosya");
+  if (!(dosya instanceof File)) return "Dosya seçilmedi.";
+
+  if (tur === "galeri" && (salon.galeri?.length ?? 0) >= EN_COK_GALERI)
+    return `Galeriye en fazla ${EN_COK_GALERI} fotoğraf konabilir. Önce birini silin.`;
+
+  const sonuc = await gorselKaydet(slug, tur, dosya);
+  if ("hata" in sonuc) return sonuc.hata;
+
+  const yeni: Salon = { ...salon };
+
+  if (tur === "logo") {
+    if (yeni.logo) await gorselSil(slug, yeni.logo);
+    yeni.logo = sonuc.url;
+  } else if (tur === "kapak") {
+    if (yeni.kapak) await gorselSil(slug, yeni.kapak);
+    yeni.kapak = sonuc.url;
+  } else if (tur === "galeri") {
+    yeni.galeri = [...(yeni.galeri ?? []), sonuc.url];
+  } else {
+    const pid = String(veri.get("personelId") ?? "");
+    const i = yeni.personel.findIndex((p) => p.id === pid);
+    if (i < 0) return "Kişi bulunamadı.";
+    const eski = yeni.personel[i].foto;
+    if (eski) await gorselSil(slug, eski);
+    yeni.personel = yeni.personel.map((p, j) => (j === i ? { ...p, foto: sonuc.url } : p));
+  }
+
+  await salonKaydet(yeni);
+  tazele();
+  revalidatePath(`/${slug}`);
+  return "tamam";
+}
+
+export async function gorselSilEylem(veri: FormData): Promise<void> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return;
+
+  const tur = String(veri.get("tur") ?? "");
+  const yeni: Salon = { ...salon };
+
+  if (tur === "logo" && yeni.logo) {
+    await gorselSil(slug, yeni.logo);
+    yeni.logo = undefined;
+  } else if (tur === "kapak" && yeni.kapak) {
+    await gorselSil(slug, yeni.kapak);
+    yeni.kapak = undefined;
+  } else if (tur === "galeri") {
+    const url = String(veri.get("url") ?? "");
+    if (!yeni.galeri?.includes(url)) return;
+    await gorselSil(slug, url);
+    yeni.galeri = yeni.galeri.filter((g) => g !== url);
+  } else if (tur === "ekip") {
+    const pid = String(veri.get("personelId") ?? "");
+    const kisi = yeni.personel.find((p) => p.id === pid);
+    if (!kisi?.foto) return;
+    await gorselSil(slug, kisi.foto);
+    yeni.personel = yeni.personel.map((p) => (p.id === pid ? { ...p, foto: undefined } : p));
+  } else {
+    return;
+  }
+
+  await salonKaydet(yeni);
+  tazele();
+  revalidatePath(`/${slug}`);
 }

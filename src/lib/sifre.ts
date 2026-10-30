@@ -46,3 +46,21 @@ export function jetonCoz(jeton: string | undefined): string | null {
   if (Number(sonStr) < Date.now()) return null;
   return slug;
 }
+
+/**
+ * Randevu iptal anahtarı.
+ *
+ * Müşteriye verilen bağlantının içinde bu imza bulunur. Kimse başkasının
+ * randevusunu, kimliğini bilse bile iptal edemez; imzayı üretmek için
+ * sunucudaki gizli anahtar gerekir.
+ */
+export function randevuImza(id: string): string {
+  return createHmac("sha256", gizli()).update(`randevu.${id}`).digest("hex").slice(0, 20);
+}
+
+export function randevuImzaDogru(id: string, imza: string | undefined): boolean {
+  if (!imza) return false;
+  const beklenen = randevuImza(id);
+  if (imza.length !== beklenen.length) return false;
+  return timingSafeEqual(Buffer.from(imza), Buffer.from(beklenen));
+}

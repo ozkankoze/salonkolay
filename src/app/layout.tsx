@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import { siteKoku } from "@/lib/site";
 
 const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
@@ -10,7 +11,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://salonkolay.com"),
+  metadataBase: new URL(siteKoku()),
   title: {
     default: "Salonkolay — salonunuz için randevu sayfası",
     template: "%s · Salonkolay",

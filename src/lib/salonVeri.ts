@@ -88,3 +88,11 @@ export async function salonSifreDegistir(slug: string, yeniHash: string): Promis
   }
   await sorgu(`update salonlar set sifre_hash = $2 where slug = $1`, [slug.toLowerCase(), yeniHash]);
 }
+
+/** Sitemap ve yönetim için: kayıtlı bütün salonların slug'ları. */
+export async function tumSalonSluglari(): Promise<string[]> {
+  if (!pgVarMi()) return bellekKopya().map((s) => s.slug);
+  const satirlar = await sorgu<{ slug: string }>(`select slug from salonlar order by slug`);
+  if (satirlar.length === 0) return salonlar.map((s) => s.slug);
+  return satirlar.map((s) => s.slug);
+}

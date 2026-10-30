@@ -1,6 +1,7 @@
 import { telefonYaz } from "@/lib/bicim";
 import Kabuk, { korunanSalon } from "../Kabuk";
 import { BilgiFormu, EkipFormu, HizmetFormu, SaatFormu, SifreFormu } from "./Formlar";
+import FotoFormu from "./FotoFormu";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,15 @@ export default async function Ayarlar() {
           telefon={telefonYaz(salon.telefon)}
           adres={salon.adres}
           instagram={salon.instagram}
+        />
+      </Bolum>
+
+      <Bolum baslik="Fotoğraflar">
+        <FotoFormu
+          logo={salon.logo}
+          kapak={salon.kapak}
+          galeri={salon.galeri}
+          personel={salon.personel}
         />
       </Bolum>
 

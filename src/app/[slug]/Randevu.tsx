@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { GUN_ADI, fiyatYaz, sureYaz, type Salon } from "@/lib/salon";
+import { ONAY_CUMLESI } from "@/lib/kvkk";
 
 type Adim = 1 | 2 | 3 | 4 | 5;
 
@@ -23,7 +25,9 @@ export default function Randevu({ salon }: { salon: Salon }) {
   const [saatler, setSaatler] = useState<string[] | null>(null);
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState("");
-  const [sonuc, setSonuc] = useState<null | { id: string }>(null);
+  const [onay, setOnay] = useState(false);
+  const [kopyalandi, setKopyalandi] = useState(false);
+  const [sonuc, setSonuc] = useState<null | { id: string; anahtar?: string }>(null);
 
   const hizmetler = useMemo(
     () => salon.hizmetler.filter((h) => secili.includes(h.id)),
@@ -85,6 +89,7 @@ export default function Randevu({ salon }: { salon: Salon }) {
     if (ad.trim().length < 2) return setHata("Adınızı yazar mısınız?");
     const temizTel = tel.replace(/\D/g, "");
     if (temizTel.length < 10) return setHata("Telefon numarası eksik görünüyor.");
+    if (!onay) return setHata("Devam etmek için aydınlatma metnini onaylayın.");
 
     setGonderiliyor(true);
     try {
@@ -100,10 +105,11 @@ export default function Randevu({ salon }: { salon: Salon }) {
           ad: ad.trim(),
           telefon: temizTel,
           not: not.trim() || undefined,
+          kvkk: true,
         }),
       }).then((r) => r.json());
       if (y.hata) setHata(y.hata);
-      else setSonuc({ id: y.id });
+      else setSonuc({ id: y.id, anahtar: y.anahtar });
     } catch {
       setHata("Bağlantı kurulamadı. Tekrar dener misiniz?");
     } finally {
@@ -135,8 +141,37 @@ export default function Randevu({ salon }: { salon: Salon }) {
           {hizmetler.map((h) => h.ad).join(", ")}
         </p>
         <p className="mt-4 text-[14px] text-silik">
-          Salon onayladığında size haber verilecek. Değişiklik için arayabilirsiniz.
+          Salon onayladığında size haber verilecek.
         </p>
+
+        {sonuc.anahtar && (
+          <div className="mt-5 rounded-2xl bg-kagit p-4">
+            <p className="text-[13.5px] leading-relaxed text-gri">
+              Randevunuzu görüntülemek veya <b className="text-murekkep">iptal etmek</b> için bu
+              bağlantıyı saklayın:
+            </p>
+            <Link
+              href={`/${salon.slug}/randevu/${sonuc.id}?k=${sonuc.anahtar}`}
+              className="mt-2.5 block rounded-xl py-3 text-center text-[15px] font-semibold text-white"
+              style={{ background: salon.koyu }}
+            >
+              Randevumu görüntüle
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                const adres = `${window.location.origin}/${salon.slug}/randevu/${sonuc.id}?k=${sonuc.anahtar}`;
+                navigator.clipboard?.writeText(adres).then(
+                  () => setKopyalandi(true),
+                  () => setKopyalandi(false)
+                );
+              }}
+              className="mt-2 w-full rounded-xl border border-cizgi py-2.5 text-[13.5px] font-medium"
+            >
+              {kopyalandi ? "Bağlantı kopyalandı" : "Bağlantıyı kopyala"}
+            </button>
+          </div>
+        )}
         <div className="mt-6 flex gap-2">
           <a
             href={`https://wa.me/${salon.telefon}?text=${encodeURIComponent(
@@ -371,12 +406,33 @@ export default function Randevu({ salon }: { salon: Salon }) {
             <Alan etiket="Not (isteğe bağlı)" deger={not} degistir={setNot} tip="text" ornek="Saçım uzun" />
           </div>
 
+          <label className="mt-4 flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={onay}
+              onChange={(e) => setOnay(e.target.checked)}
+              className="mt-0.5 h-[19px] w-[19px] shrink-0"
+              style={{ accentColor: R }}
+            />
+            <span className="text-[13.5px] leading-relaxed text-gri">
+              {ONAY_CUMLESI}{" "}
+              <Link
+                href={`/${salon.slug}/kvkk`}
+                target="_blank"
+                className="font-medium underline underline-offset-2"
+                style={{ color: R }}
+              >
+                Aydınlatma metni
+              </Link>
+            </span>
+          </label>
+
           {hata && <p className="mt-3 text-[14px] text-ana-koyu">{hata}</p>}
 
           <button
             type="button"
             onClick={gonder}
-            disabled={gonderiliyor}
+            disabled={gonderiliyor || !onay}
             className="mt-5 w-full rounded-xl py-4 text-[16px] font-semibold text-white disabled:opacity-60"
             style={{ background: R }}
           >
