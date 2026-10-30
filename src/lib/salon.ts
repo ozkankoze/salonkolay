@@ -93,6 +93,13 @@ export type Salon = {
   haritaUrl?: string;
   haritaGomme?: string;
 
+  /**
+   * Seçili hazır tema (bkz. `tema.ts`). Renkler aşağıya yazıldığı için
+   * sayfalar bunu okumaz; panelde hangi kartın işaretli olduğunu
+   * bilmek ve "kendi rengim" durumunu ayırt etmek için tutuluyor.
+   */
+  tema?: string;
+
   /** Tema — her salon kendi rengini taşır. */
   renk: string; // vurgu / altın
   koyu: string; // koyu metin ve düğme

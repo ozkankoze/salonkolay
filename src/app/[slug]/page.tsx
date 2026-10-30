@@ -28,6 +28,7 @@ import DilDugmesi from "../DilDugmesi";
 import HizmetSecimi from "./HizmetSecimi";
 import Galeri from "./Galeri";
 import { salonGetir } from "@/lib/salonVeri";
+import { telefonYaz } from "@/lib/bicim";
 
 export const dynamic = "force-dynamic";
 
@@ -311,28 +312,92 @@ export default async function SalonSitesi({
         </section>
       )}
 
-      {/* ═══════ yorumlar ═══════ */}
-      {s.yorumlar && (
+      {/* ═══════ yorumlar ve güven ═══════ */}
+      {s.yorumlar && s.yorumlar.length > 0 && (
         <section className="mx-auto max-w-[1120px] px-5 py-14">
           <div className="text-[13px] font-semibold tracking-[0.18em] uppercase" style={{ color: "var(--renk)" }}>
             {t.misafirlerimiz}
           </div>
-          <h2 className="mt-3 text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">{t.neDiyorlar}</h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {s.yorumlar.map((y) => (
-              <div key={y.ad} className="rounded-[22px] p-7" style={{ background: "var(--acik)" }}>
-                <div className="text-[15px]" style={{ color: "var(--renk)" }}>
-                  {"★".repeat(y.puan)}
+
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+            <h2 className="text-[30px] font-semibold tracking-[-0.025em] md:text-[38px]">
+              {t.neDiyorlar}
+            </h2>
+            {puan && (
+              <div className="text-right">
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-[30px] leading-none font-semibold" style={{ color: "var(--renk)" }}>
+                    {puan.puan.toLocaleString(dil === "en" ? "en-US" : "tr-TR")}
+                  </span>
+                  {/* Aşağı yuvarlıyoruz: 4,8 için beş dolu yıldız
+                      göstermek puanı olduğundan iyi gösterir. */}
+                  <span aria-hidden className="text-[18px]" style={{ color: "var(--renk)" }}>
+                    <span>{"★".repeat(Math.floor(puan.puan))}</span>
+                    <span className="opacity-25">{"★".repeat(5 - Math.floor(puan.puan))}</span>
+                  </span>
                 </div>
-                <p className="mt-3 text-[15.5px] leading-[1.65] opacity-80">{sec(y.metin, y.metinEn, dil)}</p>
-                <div className="mt-4 text-[14px] font-medium">
-                  {y.ad}
-                  {y.tarih && (
-                    <span className="ml-2 font-normal opacity-50">{sec(y.tarih, y.tarihEn, dil)}</span>
-                  )}
+                <div className="mt-1 text-[13px] opacity-55">
+                  {puan.adet} {t.yorumAdet}
                 </div>
               </div>
+            )}
+          </div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {s.yorumlar.map((y, i) => (
+              <figure
+                key={`${y.ad}-${i}`}
+                className="flex flex-col rounded-[22px] p-7"
+                style={{ background: "var(--acik)", border: "1px solid rgba(0,0,0,.05)" }}
+              >
+                <div className="text-[15px] tracking-[0.1em]" style={{ color: "var(--renk)" }}>
+                  <span aria-hidden>{"★".repeat(y.puan)}</span>
+                  <span className="opacity-25" aria-hidden>
+                    {"★".repeat(5 - y.puan)}
+                  </span>
+                  <span className="sr-only">{y.puan} / 5</span>
+                </div>
+                <blockquote className="mt-3 flex-1 text-[15.5px] leading-[1.65] opacity-80">
+                  {sec(y.metin, y.metinEn, dil)}
+                </blockquote>
+                <figcaption className="mt-5 flex items-center gap-2.5 border-t border-black/[.06] pt-4 text-[14px]">
+                  <span
+                    aria-hidden
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[13px] font-semibold"
+                    style={{ background: `${s.renk}1f`, color: s.renk }}
+                  >
+                    {y.ad.charAt(0)}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{y.ad}</span>
+                    {y.tarih && (
+                      <span className="block text-[12.5px] opacity-50">
+                        {sec(y.tarih, y.tarihEn, dil)}
+                      </span>
+                    )}
+                  </span>
+                </figcaption>
+              </figure>
             ))}
+          </div>
+
+          {puan && <p className="mt-4 text-[13px] opacity-50">{t.puanNereden}</p>}
+
+          {/* salonun doğrulanabilir bilgileri */}
+          <div
+            className="mt-10 grid gap-5 rounded-[22px] p-7 sm:grid-cols-3"
+            style={{ background: "var(--acik)", border: "1px solid rgba(0,0,0,.05)" }}
+          >
+            {s.adres && <Bilgi etiket={t.adresEtiket} deger={s.adres} />}
+            <Bilgi etiket={t.telefonEtiket} deger={telefonYaz(s.telefon)} />
+            <Bilgi
+              etiket={t.bugunSaatleri}
+              deger={
+                durum.acik
+                  ? `${t.suAnAcik} · ${doldur(t.kapanisaKadar, { saat: durum.kapanis })}`
+                  : t.suAnKapali
+              }
+            />
           </div>
         </section>
       )}
@@ -611,5 +676,17 @@ function DurumRozeti({
       <b>{durum.acik ? t.suAnAcik : t.suAnKapali}</b>
       {yazi && <span className={beyaz ? "opacity-85" : "opacity-65"}>· {yazi}</span>}
     </span>
+  );
+}
+
+
+function Bilgi({ etiket, deger }: { etiket: string; deger: string }) {
+  return (
+    <div>
+      <div className="text-[12px] font-semibold tracking-[0.14em] uppercase opacity-45">
+        {etiket}
+      </div>
+      <div className="mt-1.5 text-[15px] leading-[1.5]">{deger}</div>
+    </div>
   );
 }

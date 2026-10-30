@@ -8,7 +8,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cikisYap, girisDene, oturumSlug, sifreDegistir } from "@/lib/oturum";
-import type { Calisma, GaleriOgesi, Hizmet, Personel, Salon } from "@/lib/salon";
+import type { Calisma, GaleriOgesi, Hizmet, Personel, Salon, Yorum } from "@/lib/salon";
 import { salonGetir, salonKaydet } from "@/lib/salonVeri";
 import {
   durumDegistir,
@@ -26,6 +26,7 @@ import { dkCevir, personelSec, yerUygunMu, type Randevu } from "@/lib/saat";
 import { gorselKaydet, gorselSil, type GorselTuru } from "@/lib/gorsel";
 import { denemePostasi, epostaGonder, epostaKuruluMu, gecerliEposta } from "@/lib/eposta";
 import { siteKoku } from "@/lib/site";
+import { temaBul } from "@/lib/tema";
 
 async function slugAl(): Promise<string> {
   const s = await oturumSlug();
@@ -298,6 +299,33 @@ export async function ayarKaydetEylem(
     }
   }
 
+  // Yorumlar — salonun kendi müşterilerinden, elle giriliyor.
+  const yorumJson = veri.get("yorumlar");
+  if (yorumJson !== null) {
+    try {
+      const liste = JSON.parse(String(yorumJson)) as Yorum[];
+      const temiz: Yorum[] = [];
+      for (const y of liste) {
+        const adi = String(y.ad ?? "").trim().slice(0, 40);
+        const metin = String(y.metin ?? "").trim().slice(0, 600);
+        const puan = Math.round(Number(y.puan));
+        if (!adi || !metin || !Number.isFinite(puan) || puan < 1 || puan > 5) continue;
+        temiz.push({
+          ad: adi,
+          puan,
+          metin,
+          metinEn: y.metinEn ? String(y.metinEn).trim().slice(0, 600) || undefined : undefined,
+          tarih: y.tarih ? String(y.tarih).trim().slice(0, 30) || undefined : undefined,
+          tarihEn: y.tarihEn ? String(y.tarihEn).trim().slice(0, 30) || undefined : undefined,
+        });
+      }
+      // Hepsi silinmişse bölüm sayfada görünmez; bu geçerli bir durum.
+      yeni.yorumlar = temiz.length ? temiz : undefined;
+    } catch {
+      return "Yorum listesi okunamadı.";
+    }
+  }
+
   // Çalışma saatleri
   if (veri.get("calisma_0_acilis") !== null) {
     const calisma: Calisma[] = [];
@@ -318,7 +346,9 @@ export async function ayarKaydetEylem(
   revalidatePath("/panel", "layout");
   revalidatePath(`/${slug}`);
   revalidatePath(`/${slug}/randevu`);
-  return null;
+  // "tamam" dönmezse formda hiçbir onay görünmüyor; salon kaydın
+  // gerçekten geçtiğini anlayamıyordu.
+  return "tamam";
 }
 
 export async function sifreEylem(_onceki: string | null, veri: FormData): Promise<string | null> {
@@ -545,5 +575,49 @@ export async function galeriBilgiEylem(
   await salonKaydet({ ...salon, galeri });
   tazele();
   revalidatePath(`/${slug}`);
+  return "tamam";
+}
+
+
+/* ───────── tema ───────── */
+
+/**
+ * Hazır tema seçimi ya da salonun kendi vurgu rengi.
+ *
+ * Tema seçilince dört renk salonun kaydına yazılır; sayfalar tema
+ * diye bir şey bilmez, eskisi gibi `s.renk` okur.
+ */
+export async function temaEylem(
+  _onceki: string | null,
+  veri: FormData
+): Promise<string | null> {
+  const slug = await slugAl();
+  const salon = await salonGetir(slug);
+  if (!salon) return "Salon bulunamadı.";
+
+  const secim = String(veri.get("tema") ?? "");
+
+  if (secim === "ozel") {
+    const renk = String(veri.get("renk") ?? "").trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(renk)) return "Renk kodu #RRGGBB biçiminde olmalı.";
+    // Yalnız vurgu rengi değişir; zemin ve metin rengi okunabilirliği
+    // bozmasın diye mevcut temadan kalır.
+    await salonKaydet({ ...salon, tema: undefined, renk });
+  } else {
+    const t = temaBul(secim);
+    if (!t) return "Tema bulunamadı.";
+    await salonKaydet({
+      ...salon,
+      tema: t.id,
+      renk: t.renk,
+      koyu: t.koyu,
+      zemin: t.zemin,
+      acikZemin: t.acikZemin,
+    });
+  }
+
+  tazele();
+  revalidatePath(`/${slug}`);
+  revalidatePath(`/${slug}/randevu`);
   return "tamam";
 }

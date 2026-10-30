@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import type { Hizmet, Personel } from "@/lib/salon";
-import { ayarKaydetEylem, dilAyarEylem, sifreEylem } from "../eylemler";
+import type { Hizmet, Personel, Yorum } from "@/lib/salon";
+import { TEMALAR } from "@/lib/tema";
+import { ayarKaydetEylem, dilAyarEylem, sifreEylem, temaEylem } from "../eylemler";
 
 const giris =
   "w-full rounded-xl border border-cizgi bg-kagit px-3.5 py-3 outline-none placeholder:text-silik focus:border-ana";
@@ -529,5 +530,227 @@ export function SifreFormu() {
         <Kaydet bekliyor={bekliyor} />
       </div>
     </form>
+  );
+}
+
+/* ───────────── yorumlar ───────────── */
+
+/**
+ * Salonun kendi müşteri yorumları.
+ *
+ * Puan ortalaması bu listeden hesaplanıp sitede gösteriliyor; bu yüzden
+ * buraya uydurma yorum girmek sayfadaki puanı da yalan yapar. Formda
+ * bunu açıkça yazıyoruz.
+ */
+export function YorumFormu({
+  baslangic,
+  ingilizce,
+}: {
+  baslangic: Yorum[];
+  ingilizce?: boolean;
+}) {
+  const [durum, gonder, bekliyor] = useActionState(ayarKaydetEylem, null);
+  const [liste, setListe] = useState<Yorum[]>(baslangic);
+
+  const degistir = (i: number, yama: Partial<Yorum>) =>
+    setListe((o) => o.map((y, j) => (j === i ? { ...y, ...yama } : y)));
+
+  const ortalama = liste.length
+    ? Math.round((liste.reduce((t, y) => t + (y.puan || 0), 0) / liste.length) * 10) / 10
+    : null;
+
+  return (
+    <form action={gonder}>
+      <input type="hidden" name="yorumlar" value={JSON.stringify(liste)} />
+
+      <p className="mb-4 rounded-xl bg-kagit px-4 py-3 text-[13.5px] leading-relaxed text-gri">
+        Buraya <b className="text-murekkep">gerçek müşterilerinizin</b> söylediklerini yazın.
+        Sitedeki puan ortalaması bu yorumlardan hesaplanıyor — uydurma yorum girerseniz
+        sayfadaki puan da yanlış olur.
+        {ortalama !== null && (
+          <>
+            {" "}
+            Şu anki ortalama: <b className="text-murekkep">{ortalama}</b> ({liste.length} yorum)
+          </>
+        )}
+      </p>
+
+      <ul className="space-y-3">
+        {liste.map((y, i) => (
+          <li key={i} className="rounded-2xl border border-cizgi p-4">
+            <div className="grid gap-2.5 sm:grid-cols-[1fr_auto_1fr]">
+              <L e="Müşterinin adı">
+                <input
+                  value={y.ad}
+                  onChange={(e) => degistir(i, { ad: e.target.value })}
+                  placeholder="Elif T."
+                  className={giris}
+                />
+              </L>
+              <L e="Puan">
+                <select
+                  value={y.puan}
+                  onChange={(e) => degistir(i, { puan: Number(e.target.value) })}
+                  className={giris}
+                >
+                  {[5, 4, 3, 2, 1].map((p) => (
+                    <option key={p} value={p}>
+                      {"★".repeat(p)} ({p})
+                    </option>
+                  ))}
+                </select>
+              </L>
+              <L e="Ne zaman">
+                <input
+                  value={y.tarih ?? ""}
+                  onChange={(e) => degistir(i, { tarih: e.target.value || undefined })}
+                  placeholder="2 hafta önce"
+                  className={giris}
+                />
+              </L>
+            </div>
+
+            <L e="Yorum">
+              <textarea
+                value={y.metin}
+                onChange={(e) => degistir(i, { metin: e.target.value })}
+                rows={3}
+                className={`${giris} mt-2.5`}
+              />
+            </L>
+
+            {ingilizce && (
+              <details className="mt-2.5">
+                <summary className="cursor-pointer text-[13.5px] text-gri">
+                  İngilizcesi{" "}
+                  <span className="text-silik">{y.metinEn ? "(girildi)" : "(girilmedi)"}</span>
+                </summary>
+                <L e="Yorum (EN)">
+                  <textarea
+                    value={y.metinEn ?? ""}
+                    onChange={(e) => degistir(i, { metinEn: e.target.value || undefined })}
+                    rows={3}
+                    className={`${giris} mt-2.5`}
+                  />
+                </L>
+                <L e="Ne zaman (EN)">
+                  <input
+                    value={y.tarihEn ?? ""}
+                    onChange={(e) => degistir(i, { tarihEn: e.target.value || undefined })}
+                    placeholder="2 weeks ago"
+                    className={`${giris} mt-2.5`}
+                  />
+                </L>
+              </details>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setListe((o) => o.filter((_, j) => j !== i))}
+              className="mt-2.5 text-[13.5px] text-silik"
+            >
+              Sil
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={() => setListe((o) => [...o, { ad: "", puan: 5, metin: "" }])}
+        className="mt-3 w-full rounded-xl border border-dashed border-cizgi py-3 text-[14.5px] font-medium text-ana"
+      >
+        + Yorum ekle
+      </button>
+
+      <p className="mt-3 text-[13px] text-silik">
+        Hiç yorum girmezseniz bölüm sitede görünmez — boş bir “Ne diyorlar?” başlığı kalmaz.
+      </p>
+
+      <Durum hata={durum} />
+      <Kaydet bekliyor={bekliyor} />
+    </form>
+  );
+}
+
+/* ───────────── tema ───────────── */
+
+export function TemaFormu({
+  secili,
+  renk,
+}: {
+  secili?: string;
+  renk: string;
+}) {
+  const [durum, gonder, bekliyor] = useActionState(temaEylem, null);
+  const [ozelRenk, setOzelRenk] = useState(renk);
+
+  return (
+    <div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {TEMALAR.map((t) => (
+          <form key={t.id} action={gonder}>
+            <input type="hidden" name="tema" value={t.id} />
+            <button
+              className="w-full rounded-2xl border p-4 text-left transition-colors"
+              style={{
+                borderColor: secili === t.id ? t.renk : "var(--color-cizgi)",
+                background: secili === t.id ? `${t.renk}10` : "transparent",
+              }}
+            >
+              <span className="flex items-center gap-2">
+                {[t.renk, t.koyu, t.zemin, t.acikZemin].map((c) => (
+                  <span
+                    key={c}
+                    className="h-7 w-7 rounded-full border border-black/10"
+                    style={{ background: c }}
+                  />
+                ))}
+                {secili === t.id && (
+                  <span className="ml-auto text-[13px] font-semibold" style={{ color: t.renk }}>
+                    seçili
+                  </span>
+                )}
+              </span>
+              <span className="mt-3 block text-[15.5px] font-semibold">{t.ad}</span>
+              <span className="mt-0.5 block text-[13px] text-gri">{t.aciklama}</span>
+            </button>
+          </form>
+        ))}
+      </div>
+
+      <form action={gonder} className="mt-5 rounded-2xl border border-cizgi p-4">
+        <input type="hidden" name="tema" value="ozel" />
+        <div className="text-[15px] font-semibold">Kendi vurgu rengim</div>
+        <p className="mt-1 text-[13px] text-gri">
+          Yalnız vurgu rengi değişir; zemin ve yazı rengi yukarıdaki temadan kalır, böylece okunurluk
+          bozulmaz.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+          <input
+            type="color"
+            value={ozelRenk}
+            onChange={(e) => setOzelRenk(e.target.value)}
+            aria-label="Renk seç"
+            className="h-11 w-14 cursor-pointer rounded-lg border border-cizgi bg-kagit p-1"
+          />
+          <input
+            name="renk"
+            value={ozelRenk}
+            onChange={(e) => setOzelRenk(e.target.value)}
+            placeholder="#B84A6E"
+            className={`${giris} max-w-[160px]`}
+          />
+          <button
+            disabled={bekliyor}
+            className="rounded-xl bg-ana px-5 py-3 text-[14.5px] font-semibold text-white disabled:opacity-40"
+          >
+            {bekliyor ? "Kaydediliyor…" : "Uygula"}
+          </button>
+        </div>
+      </form>
+
+      <Durum hata={durum} />
+    </div>
   );
 }

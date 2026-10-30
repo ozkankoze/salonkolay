@@ -7,6 +7,8 @@ import {
   HizmetFormu,
   SaatFormu,
   SifreFormu,
+  TemaFormu,
+  YorumFormu,
 } from "./Formlar";
 import FotoFormu from "./FotoFormu";
 import BildirimFormu from "./BildirimFormu";
@@ -35,6 +37,14 @@ export default async function Ayarlar() {
           adres={salon.adres}
           instagram={salon.instagram}
         />
+      </Bolum>
+
+      <Bolum baslik="Görünüm">
+        <TemaFormu secili={salon.tema} renk={salon.renk} />
+      </Bolum>
+
+      <Bolum baslik="Müşteri yorumları">
+        <YorumFormu baslangic={salon.yorumlar ?? []} ingilizce={salon.ingilizce} />
       </Bolum>
 
       <Bolum baslik="İngilizce (dil eklentisi)">
