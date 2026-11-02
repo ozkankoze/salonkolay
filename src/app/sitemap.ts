@@ -23,6 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: kok, changeFrequency: "monthly", priority: 1 },
+    { url: `${kok}/kesfet`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${kok}/salon-ekle`, changeFrequency: "monthly", priority: 0.7 },
     ...salonSayfalari,
   ];
 }

@@ -96,3 +96,16 @@ export async function tumSalonSluglari(): Promise<string[]> {
   if (satirlar.length === 0) return salonlar.map((s) => s.slug);
   return satirlar.map((s) => s.slug);
 }
+
+/**
+ * Salonkolay'ın kendi sayfaları için: kayıtlı bütün salonlar.
+ *
+ * ⚠️ TOHUM DİZİSİNİ DOĞRUDAN OKUMUYORUZ. Salon sahibi panelden adını,
+ * fotoğrafını ya da saatlerini değiştirdiyse ana sayfa ve keşfet onu
+ * göstermeli; `salon.ts` içindeki tohum kayıt ilk hâlidir.
+ */
+export async function tumSalonlarVeri(): Promise<Salon[]> {
+  const sluglar = await tumSalonSluglari();
+  const kayitlar = await Promise.all(sluglar.map((s) => salonGetir(s)));
+  return kayitlar.filter((s): s is Salon => !!s);
+}

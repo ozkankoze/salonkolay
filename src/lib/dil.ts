@@ -241,6 +241,100 @@ const TR = {
   aylarKisa: ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"],
   dk: "dk",
   sa: "sa",
+
+  /* ── Salonkolay'ın kendi sayfaları: üst bar, ana sayfa, keşfet, başvuru ── */
+  pKesfet: "Salonları Keşfet",
+  pKategoriler: "Kategoriler",
+  pNasil: "Nasıl Çalışır?",
+  pSalonEkle: "Salonunu Ekle",
+  pGiris: "Giriş Yap",
+  pMenu: "Menü",
+  pKapat: "Kapat",
+
+  pHeroUst: "Güzelliğe zaman ayır.",
+  pHeroAlt: "Gerisini bize bırak.",
+  pHeroAciklama:
+    "En iyi salonları keşfet, sana uygun hizmeti seç ve randevunu saniyeler içinde oluştur.",
+  pAramaHizmet: "Salon veya hizmet ara",
+  pAramaHizmetYer: "Saç kesimi, balyaj…",
+  pAramaKonum: "Konum",
+  pAramaKonumHepsi: "Tüm konumlar",
+  pAramaDugme: "Keşfet",
+
+  pKatBaslik: "Bugün kendine ne iyi gelir?",
+  pKatAciklama: "Aradığın hizmeti seç, o kategorideki salonları gör.",
+  pKatYakinda: "Yakında",
+  pKatSalonSayisi: "salon",
+
+  pSalonBaslik: "Keşfetmeye değer salonlar",
+  pSalonAciklama: "Salonkolay'da sayfası olan işletmeler.",
+  pSalonHepsi: "Hepsini gör",
+  pSalonDemo: "Demo sayfa",
+  pSalonDemoNot:
+    "Pınar Kuaför, sistemin nasıl göründüğünü anlatmak için hazırlanmış örnek bir sayfadır.",
+  pSalonIncele: "Salonu incele",
+  pSalonBugun: "Bugün açık",
+  pSalonKapali: "Bugün kapalı",
+
+  pNasilBaslik: "Randevu almak hiç bu kadar kolay olmamıştı.",
+  pNasil1: "Salonunu keşfet.",
+  pNasil1Alt: "Konumuna ve aradığın hizmete göre ara, salonun sayfasını aç.",
+  pNasil2: "Hizmetini ve saatini seç.",
+  pNasil2Alt: "Fiyatı ve süreyi gör, istersen uzmanını seç, boş saatlere bak.",
+  pNasil3: "Randevunu oluştur.",
+  pNasil3Alt: "Adın ve telefonun yeter. Onay ekranından takvimine ekle.",
+
+  pVitrinUst: "Sevdiğin salon,",
+  pVitrinAlt: "tek dokunuş uzağında.",
+  pVitrinAciklama:
+    "Hizmetleri incele, fiyatları karşılaştır, uzmanını seç ve sana uygun zamanda randevunu oluştur.",
+  pVitrinDugme: "Örnek salon sayfasını aç",
+
+  pSahipUst: "Salonunuzu",
+  pSahipAlt: "geleceğe taşıyın.",
+  pSahipAciklama:
+    "Size özel salon sayfası, kolay randevu yönetimi ve müşterilerinizle daha güçlü bir bağ. Hepsi Salonkolay'da.",
+  pSahip1: "Kendi adresiniz",
+  pSahip1Alt: "salonkolay.com/salonunuz — Instagram bio'nuza koyacağınız tek bağlantı.",
+  pSahip2: "Randevu paneli",
+  pSahip2Alt: "Günlük program, takvim, kasa ve müsait saatler tek ekranda.",
+  pSahip3: "Kurulum bizde",
+  pSahip3Alt: "Hizmetleriniz, saatleriniz ve fotoğraflarınız yerleştirilmiş halde teslim.",
+
+  pAltAciklama:
+    "Salonkolay, güzellik ve bakım salonları için randevu sayfası ve yönetim paneli.",
+  pAltKategoriler: "Kategoriler",
+  pAltKurumsal: "Salonkolay",
+  pAltIletisim: "İletişim",
+  pAltHaklar: "Tüm hakları saklıdır.",
+
+  kBaslik: "Salonları keşfet",
+  kAciklama: "Hizmete, salon adına veya konuma göre ara.",
+  kSonuc: "salon bulundu",
+  kTumKategoriler: "Tümü",
+  kFiltreTemizle: "Filtreyi temizle",
+  kBosBaslik: "Bu aramaya uyan salon yok.",
+  kBosAciklama:
+    "Salonkolay yeni; her kategoride henüz salon yok. Aradığın salonun burada olmasını istersen bize söyle, biz davet edelim.",
+  kBosDugme: "Salonunu ekle",
+
+  sBaslik: "Salonunuzu Salonkolay'a ekleyin",
+  sAciklama:
+    "Formu bırakın, aynı gün dönüş yapalım. Sayfanızı biz kuruyoruz; hizmetleriniz, çalışma saatleriniz ve fotoğraflarınız yerleştirilmiş halde teslim ediyoruz.",
+  sSalonAdi: "Salon adı",
+  sSehir: "Şehir / ilçe",
+  sTelefon: "Telefon",
+  sInstagram: "Instagram (isteğe bağlı)",
+  sEposta: "E-posta (isteğe bağlı)",
+  sNot: "Eklemek istediğiniz bir şey var mı?",
+  sGonder: "Başvuruyu gönder",
+  sGonderiliyor: "Gönderiliyor…",
+  sTamam: "Başvurunuz bize ulaştı. En kısa sürede arayacağız.",
+  sHataAlan: "Lütfen salon adı, şehir ve telefon alanlarını doldurun.",
+  sHataTelefon: "Telefon numarası geçerli görünmüyor.",
+  sHataGonderim: "Başvuru şu an gönderilemedi. Telefonla ulaşabilirsiniz:",
+  sKvkk:
+    "Formu göndererek, sizinle bu başvuru hakkında iletişime geçmemiz için bilgilerinizin işlenmesine izin vermiş olursunuz.",
 };
 
 const EN: Sozluk = {
@@ -431,6 +525,100 @@ const EN: Sozluk = {
   aylarKisa: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
   dk: "min",
   sa: "h",
+
+  /* ── Salonkolay's own pages: header, home, discover, apply ── */
+  pKesfet: "Discover salons",
+  pKategoriler: "Categories",
+  pNasil: "How it works",
+  pSalonEkle: "List your salon",
+  pGiris: "Log in",
+  pMenu: "Menu",
+  pKapat: "Close",
+
+  pHeroUst: "Make time for yourself.",
+  pHeroAlt: "We’ll handle the rest.",
+  pHeroAciklama:
+    "Discover the best salons, pick the service that suits you and book in seconds.",
+  pAramaHizmet: "Search a salon or service",
+  pAramaHizmetYer: "Haircut, balayage…",
+  pAramaKonum: "Location",
+  pAramaKonumHepsi: "All locations",
+  pAramaDugme: "Discover",
+
+  pKatBaslik: "What would feel good today?",
+  pKatAciklama: "Pick what you are after and see the salons in that category.",
+  pKatYakinda: "Soon",
+  pKatSalonSayisi: "salons",
+
+  pSalonBaslik: "Salons worth discovering",
+  pSalonAciklama: "Businesses with a page on Salonkolay.",
+  pSalonHepsi: "See all",
+  pSalonDemo: "Demo page",
+  pSalonDemoNot:
+    "Pınar Kuaför is an example page, built to show how the system looks.",
+  pSalonIncele: "View salon",
+  pSalonBugun: "Open today",
+  pSalonKapali: "Closed today",
+
+  pNasilBaslik: "Booking has never been this easy.",
+  pNasil1: "Find your salon.",
+  pNasil1Alt: "Search by location or service and open the salon’s page.",
+  pNasil2: "Pick the service and time.",
+  pNasil2Alt: "See the price and duration, choose your stylist, check free slots.",
+  pNasil3: "Book it.",
+  pNasil3Alt: "Your name and phone are enough. Add it to your calendar on the confirmation screen.",
+
+  pVitrinUst: "The salon you love,",
+  pVitrinAlt: "one tap away.",
+  pVitrinAciklama:
+    "Browse the services, compare prices, choose your stylist and book a time that works for you.",
+  pVitrinDugme: "Open the example salon page",
+
+  pSahipUst: "Bring your salon",
+  pSahipAlt: "into the future.",
+  pSahipAciklama:
+    "Your own salon page, easy booking management and a stronger bond with your guests. All on Salonkolay.",
+  pSahip1: "Your own address",
+  pSahip1Alt: "salonkolay.com/yoursalon — one link for your Instagram bio.",
+  pSahip2: "Booking panel",
+  pSahip2Alt: "Daily schedule, calendar, till and free slots on one screen.",
+  pSahip3: "We set it up",
+  pSahip3Alt: "Delivered with your services, hours and photos already in place.",
+
+  pAltAciklama:
+    "Salonkolay — booking pages and a management panel for beauty and grooming salons.",
+  pAltKategoriler: "Categories",
+  pAltKurumsal: "Salonkolay",
+  pAltIletisim: "Contact",
+  pAltHaklar: "All rights reserved.",
+
+  kBaslik: "Discover salons",
+  kAciklama: "Search by service, salon name or location.",
+  kSonuc: "salons found",
+  kTumKategoriler: "All",
+  kFiltreTemizle: "Clear filters",
+  kBosBaslik: "No salon matches this search.",
+  kBosAciklama:
+    "Salonkolay is new and not every category has a salon yet. If you want a salon listed here, tell us and we will invite them.",
+  kBosDugme: "List your salon",
+
+  sBaslik: "List your salon on Salonkolay",
+  sAciklama:
+    "Leave your details and we will get back to you the same day. We build the page for you — services, opening hours and photos already in place.",
+  sSalonAdi: "Salon name",
+  sSehir: "City / district",
+  sTelefon: "Phone",
+  sInstagram: "Instagram (optional)",
+  sEposta: "Email (optional)",
+  sNot: "Anything you would like to add?",
+  sGonder: "Send application",
+  sGonderiliyor: "Sending…",
+  sTamam: "We have your application. We will call you shortly.",
+  sHataAlan: "Please fill in the salon name, city and phone fields.",
+  sHataTelefon: "That phone number does not look valid.",
+  sHataGonderim: "The application could not be sent right now. You can reach us by phone:",
+  sKvkk:
+    "By sending this form you allow us to process your details so we can contact you about this application.",
 };
 
 export function sozluk(dil: Dil): Sozluk {

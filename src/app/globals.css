@@ -60,3 +60,85 @@ button {
 .serit::-webkit-scrollbar {
   display: none;
 }
+
+/* ==================================================================
+   SALONKOLAY PLATFORM YÜZÜ
+
+   Ana sayfa, keşfet ve salon başvurusu — yani Salonkolay'ın KENDİ
+   sayfaları. Salon sayfaları buraya bakmaz: onlar renklerini
+   `[slug]/page.tsx` içinde kendi kayıtlarından CSS değişkeni olarak
+   alıyor. Bu yüzden aşağıdaki jetonlar eklemedir, hiçbir mevcut
+   jetonun üzerine yazmaz.
+
+   Palet: kırık beyaz zemin, antrasit yazı, sıcak bej yüzeyler,
+   tek bir zarif gül vurgusu.
+================================================================== */
+
+@theme {
+  --color-p-zemin: #faf8f5;
+  --color-p-kart: #ffffff;
+  --color-p-bej: #f1e9dd;
+  --color-p-bej2: #e5d9c7;
+  --color-p-murekkep: #1a1917;
+  --color-p-gri: #6c655c;
+  --color-p-silik: #a49b90;
+  --color-p-cizgi: #e8e1d6;
+  --color-p-vurgu: #9b4a5a;
+  --color-p-vurgu2: #7c3847;
+
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+}
+
+/* Başlıklar — gövde Outfit, başlıklar Fraunces. */
+.p-serif {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+/* Bölümler arası bağ: ince, kırılgan bir çizgi yerine yumuşak geçiş. */
+.p-gecis {
+  background: linear-gradient(180deg, var(--color-p-zemin) 0%, var(--color-p-bej) 100%);
+}
+
+/* Kaydırınca beliren bölümler. Abartısız: 10px ve 0.5s. */
+@media (prefers-reduced-motion: no-preference) {
+  .p-bel {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+  .p-bel.p-gorundu {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .p-bel {
+    opacity: 1;
+  }
+}
+
+/* Kart üzerine gelince: görsel hafifçe büyür, kart hafifçe kalkar. */
+.p-kart {
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.p-kart .p-gorsel {
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+@media (hover: hover) {
+  .p-kart:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -24px rgba(26, 25, 23, 0.4);
+  }
+  .p-kart:hover .p-gorsel {
+    transform: scale(1.045);
+  }
+}
+
+/* Odak halkası — klavyeyle gezenler için her yerde aynı. */
+.p-odak:focus-visible {
+  outline: 2px solid var(--color-p-vurgu);
+  outline-offset: 3px;
+  border-radius: 10px;
+}

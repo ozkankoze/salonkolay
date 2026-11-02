@@ -118,6 +118,11 @@ export type Salon = {
   aralikDk: number;
   /** Bugünden itibaren kaç gün ileriye randevu alınabilir. */
   ufukGun: number;
+  /**
+   * Salonkolay'ın kendi keşfet sayfasındaki kategoriler
+   * (bkz. `kategori.ts`). Salonun kendi sayfasını etkilemez.
+   */
+  kategoriler?: string[];
   /** Demo sayfası mı — altta uyarı gösterilir. */
   demo?: boolean;
   /**
@@ -263,6 +268,7 @@ export const salonlar: Salon[] = [
     ],
     aralikDk: 15,
     ufukGun: 14,
+    kategoriler: ["kadin-kuaforu"],
     demo: true,
     ingilizce: true,
   },
