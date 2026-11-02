@@ -83,6 +83,15 @@ async function semaKur(): Promise<void> {
       olusturma  bigint      not null
     );
     create index if not exists kasa_salon_gun on kasa (salon, gun);
+
+    create table if not exists cihazlar (
+      jeton      text        primary key,
+      salon      text        not null,
+      platform   text        not null default 'bilinmiyor',
+      ad         text,
+      guncelleme timestamptz not null default now()
+    );
+    create index if not exists cihazlar_salon on cihazlar (salon);
   `);
 }
 

@@ -19,6 +19,7 @@ import { gunYaz, telefonYaz } from "./bicim";
 import { saatYaz, type Randevu } from "./saat";
 import { fiyatYaz, type Salon } from "./salon";
 import { siteKoku } from "./site";
+import { salonaPushGonder } from "./push";
 
 function bildirimAcikMi(s: Salon): boolean {
   if (!s.eposta) return false;
@@ -46,8 +47,19 @@ function bilgiCikar(salon: Salon, r: Randevu) {
 
 /** Yeni randevu geldiğinde. Panelden eklenenler için gönderilmez. */
 export async function yeniRandevuBildir(salon: Salon, r: Randevu): Promise<void> {
-  if (!bildirimAcikMi(salon)) return;
   if (r.kaynak === "panel") return; // salonun kendi eklediği randevu
+
+  // ⚠️ PUSH, E-POSTA AYARINA BAKMAZ. `bildirimAcikMi` e-posta adresi ve
+  // e-posta tercihi için; telefonunda uygulama olan salon, e-posta
+  // adresi girmemiş olsa bile bildirimi almalı. İkisi ayrı kanal.
+  const b = bilgiCikar(salon, r);
+  await salonaPushGonder(salon.slug, {
+    baslik: "Yeni randevu",
+    govde: `${b.gun} ${b.saat} · ${b.musteri}${b.hizmetler ? ` · ${b.hizmetler}` : ""}`,
+    veri: { tur: "yeni", gun: r.gun, randevu: r.id },
+  });
+
+  if (!bildirimAcikMi(salon)) return;
 
   const m = yeniRandevuPostasi(bilgiCikar(salon, r));
   const sonuc = await epostaGonder({ kime: salon.eposta!, ...m });
@@ -56,6 +68,13 @@ export async function yeniRandevuBildir(salon: Salon, r: Randevu): Promise<void>
 
 /** Müşteri randevusunu iptal ettiğinde. */
 export async function iptalBildir(salon: Salon, r: Randevu): Promise<void> {
+  const i = bilgiCikar(salon, r);
+  await salonaPushGonder(salon.slug, {
+    baslik: "Randevu iptal edildi",
+    govde: `${i.gun} ${i.saat} · ${i.musteri}`,
+    veri: { tur: "iptal", gun: r.gun, randevu: r.id },
+  });
+
   if (!bildirimAcikMi(salon)) return;
 
   const m = iptalPostasi(bilgiCikar(salon, r));
@@ -65,6 +84,13 @@ export async function iptalBildir(salon: Salon, r: Randevu): Promise<void> {
 
 /** Müşteri randevusunu başka bir saate taşıdığında. */
 export async function erteleBildir(salon: Salon, eski: Randevu, yeni: Randevu): Promise<void> {
+  const y = bilgiCikar(salon, yeni);
+  await salonaPushGonder(salon.slug, {
+    baslik: "Randevu saati değişti",
+    govde: `${y.musteri} · ${gunYaz(eski.gun)} ${saatYaz(eski.baslangic)} → ${y.gun} ${y.saat}`,
+    veri: { tur: "ertele", gun: yeni.gun, randevu: yeni.id },
+  });
+
   if (!bildirimAcikMi(salon)) return;
 
   const m = ertelePostasi(bilgiCikar(salon, yeni), {
