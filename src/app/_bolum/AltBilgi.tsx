@@ -97,7 +97,7 @@ export default function AltBilgi({ dil, t }: { dil: Dil; t: Sozluk }) {
                 </a>
               </li>
               <li>
-                <Link href={a("/pinar/kvkk")} className="p-odak text-[14.5px] text-p-gri transition-colors hover:text-p-vurgu">
+                <Link href={a("/kvkk")} className="p-odak text-[14.5px] text-p-gri transition-colors hover:text-p-vurgu">
                   KVKK
                 </Link>
               </li>

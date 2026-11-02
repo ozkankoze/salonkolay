@@ -59,7 +59,7 @@ export default async function Anasayfa({
               </span>
             </div>
 
-            <h1 className="p-serif mt-6 text-[clamp(38px,6.1vw,60px)] leading-[1.04] tracking-[-0.02em] text-p-murekkep">
+            <h1 className="p-baslik mt-6 text-[clamp(38px,6.1vw,60px)] leading-[1.04] tracking-[-0.02em] text-p-murekkep">
               {t.pHeroUst}
               <br />
               <span className="text-p-vurgu">{t.pHeroAlt}</span>
@@ -122,7 +122,7 @@ export default async function Anasayfa({
       <section id="kategoriler" className="scroll-mt-20 border-t border-p-cizgi bg-p-zemin">
         <div className="mx-auto w-full max-w-[1180px] px-5 py-20 sm:px-7 sm:py-24">
           <Belir>
-            <h2 className="p-serif max-w-[520px] text-[clamp(28px,4.4vw,42px)] leading-[1.1] tracking-[-0.015em]">
+            <h2 className="p-baslik max-w-[520px] text-[clamp(28px,4.4vw,42px)] leading-[1.1] tracking-[-0.015em]">
               {t.pKatBaslik}
             </h2>
             <p className="mt-3 max-w-[460px] text-[16px] text-p-gri">{t.pKatAciklama}</p>
@@ -155,7 +155,7 @@ export default async function Anasayfa({
 
                     <div>
                       <h3
-                        className="p-serif text-[19px] leading-tight sm:text-[22px]"
+                        className="p-baslik text-[19px] leading-tight sm:text-[22px]"
                         style={{ color: k.muren }}
                       >
                         {kategoriAdi(k, dil)}
@@ -179,7 +179,7 @@ export default async function Anasayfa({
           <Belir>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="p-serif text-[clamp(28px,4.4vw,42px)] leading-[1.1] tracking-[-0.015em]">
+                <h2 className="p-baslik text-[clamp(28px,4.4vw,42px)] leading-[1.1] tracking-[-0.015em]">
                   {t.pSalonBaslik}
                 </h2>
                 <p className="mt-3 text-[16px] text-p-gri">{t.pSalonAciklama}</p>
@@ -219,7 +219,7 @@ export default async function Anasayfa({
                     <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
                   </svg>
                 </span>
-                <h3 className="p-serif mt-5 text-[21px] leading-tight">{t.pSalonEkle}</h3>
+                <h3 className="p-baslik mt-5 text-[21px] leading-tight">{t.pSalonEkle}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-p-gri">{t.pSahipAciklama}</p>
               </Link>
             </Belir>
@@ -235,7 +235,7 @@ export default async function Anasayfa({
       <section id="nasil" className="scroll-mt-20 border-t border-p-cizgi bg-p-bej">
         <div className="mx-auto w-full max-w-[1180px] px-5 py-20 sm:px-7 sm:py-24">
           <Belir>
-            <h2 className="p-serif max-w-[680px] text-[clamp(28px,4.6vw,46px)] leading-[1.08] tracking-[-0.018em]">
+            <h2 className="p-baslik max-w-[680px] text-[clamp(28px,4.6vw,46px)] leading-[1.08] tracking-[-0.018em]">
               {t.pNasilBaslik}
             </h2>
           </Belir>
@@ -251,7 +251,7 @@ export default async function Anasayfa({
               <Belir key={bas} gecikme={i * 110} className={i === 1 ? "md:mt-10" : i === 2 ? "md:mt-20" : ""}>
                 <li className="relative list-none">
                   <span
-                    className="p-serif block text-[76px] leading-none text-p-bej2 select-none sm:text-[92px]"
+                    className="p-baslik block text-[76px] leading-none text-p-bej2 select-none sm:text-[92px]"
                     aria-hidden
                   >
                     {String(i + 1).padStart(2, "0")}
@@ -260,7 +260,7 @@ export default async function Anasayfa({
                     aria-hidden
                     className="mt-3 mb-5 block h-px w-full max-w-[140px] bg-p-vurgu/35"
                   />
-                  <h3 className="p-serif text-[23px] leading-tight text-p-murekkep">{bas}</h3>
+                  <h3 className="p-baslik text-[23px] leading-tight text-p-murekkep">{bas}</h3>
                   <p className="mt-2 max-w-[320px] text-[15.5px] leading-relaxed text-p-gri">{alt}</p>
                 </li>
               </Belir>
@@ -273,7 +273,7 @@ export default async function Anasayfa({
       <section className="border-t border-p-cizgi bg-p-zemin">
         <div className="mx-auto grid w-full max-w-[1180px] items-center gap-12 px-5 py-20 sm:px-7 sm:py-24 lg:grid-cols-2 lg:gap-20">
           <Belir>
-            <h2 className="p-serif text-[clamp(28px,4.6vw,46px)] leading-[1.08] tracking-[-0.018em]">
+            <h2 className="p-baslik text-[clamp(28px,4.6vw,46px)] leading-[1.08] tracking-[-0.018em]">
               {t.pVitrinUst}
               <br />
               <span className="text-p-vurgu">{t.pVitrinAlt}</span>
@@ -305,10 +305,6 @@ export default async function Anasayfa({
                   sayfasının ekran görüntüsü. */}
               <div className="relative rounded-[44px] border border-p-cizgi bg-p-murekkep p-2.5 shadow-[0_40px_80px_-40px_rgba(26,25,23,.55)]">
                 <div className="relative overflow-hidden rounded-[34px] bg-white">
-                  <span
-                    aria-hidden
-                    className="absolute top-2 left-1/2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-p-murekkep"
-                  />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/vitrin/pinar-mobil.jpg"
@@ -332,7 +328,7 @@ export default async function Anasayfa({
         />
         <div className="relative mx-auto grid w-full max-w-[1180px] gap-12 px-5 py-20 sm:px-7 sm:py-24 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-20">
           <Belir>
-            <h2 className="p-serif text-[clamp(30px,5vw,50px)] leading-[1.06] tracking-[-0.02em]">
+            <h2 className="p-baslik text-[clamp(30px,5vw,50px)] leading-[1.06] tracking-[-0.02em]">
               {t.pSahipUst}
               <br />
               {t.pSahipAlt}

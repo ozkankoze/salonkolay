@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Outfit } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { siteKoku } from "@/lib/site";
@@ -12,16 +12,6 @@ const outfit = Outfit({
   display: "swap",
 });
 
-/**
- * Başlık yazı tipi — yalnız Salonkolay'ın kendi sayfalarında (.p-serif)
- * kullanılıyor. Salon sayfaları Outfit'te kalıyor, görünümleri değişmiyor.
- */
-const fraunces = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteKoku()),
@@ -40,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dil = dilAyikla((await cookies()).get(DIL_CEREZI)?.value) ?? "tr";
 
   return (
-    <html lang={dil} className={`${outfit.variable} ${fraunces.variable}`}>
+    <html lang={dil} className={outfit.variable}>
       <body style={{ fontFamily: "var(--font-outfit), ui-sans-serif, system-ui" }}>{children}</body>
     </html>
   );

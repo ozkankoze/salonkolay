@@ -86,13 +86,17 @@ button {
   --color-p-vurgu: #9b4a5a;
   --color-p-vurgu2: #7c3847;
 
-  --font-serif: "Fraunces", ui-serif, Georgia, serif;
 }
 
-/* Başlıklar — gövde Outfit, başlıklar Fraunces. */
-.p-serif {
-  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
-  font-optical-sizing: auto;
+/* Başlıklar.
+
+   ⚠️ SERİF DEĞİL. Önce Fraunces denendi; karakterliydi ama sayfayı
+   dergi kapağına çeviriyordu. Randevu platformunda başlığın işi
+   okutmak, kendini göstermek değil. Gövdeyle aynı aile (Outfit),
+   farkı ağırlık ve sıkı harf aralığı yaratıyor. */
+.p-baslik {
+  font-weight: 600;
+  letter-spacing: -0.028em;
 }
 
 /* Bölümler arası bağ: ince, kırılgan bir çizgi yerine yumuşak geçiş. */

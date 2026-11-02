@@ -333,6 +333,10 @@ const TR = {
   sHataAlan: "Lütfen salon adı, şehir ve telefon alanlarını doldurun.",
   sHataTelefon: "Telefon numarası geçerli görünmüyor.",
   sHataGonderim: "Başvuru şu an gönderilemedi. Telefonla ulaşabilirsiniz:",
+  pKvkkBaslik: "Kişisel verilerin korunması",
+  pKvkkAlt:
+    "Salonkolay'ın kendi sitesinde topladığı veriler. Bir salondan randevu aldığınızda veri sorumlusu o salondur; onun metni kendi sayfasındadır.",
+  pKvkkSalon: "Bir salonun kendi aydınlatma metni için salonun sayfasına bakın:",
   sKvkk:
     "Formu göndererek, sizinle bu başvuru hakkında iletişime geçmemiz için bilgilerinizin işlenmesine izin vermiş olursunuz.",
 };
@@ -617,6 +621,10 @@ const EN: Sozluk = {
   sHataAlan: "Please fill in the salon name, city and phone fields.",
   sHataTelefon: "That phone number does not look valid.",
   sHataGonderim: "The application could not be sent right now. You can reach us by phone:",
+  pKvkkBaslik: "Protection of personal data",
+  pKvkkAlt:
+    "Data collected on Salonkolay's own site. When you book with a salon, that salon is the data controller and its own notice is on its page.",
+  pKvkkSalon: "For a salon's own privacy notice, see that salon's page:",
   sKvkk:
     "By sending this form you allow us to process your details so we can contact you about this application.",
 };

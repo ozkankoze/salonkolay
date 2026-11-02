@@ -33,9 +33,9 @@ export default function Logo({
         <circle cx="14" cy="21.1" r="1.25" fill={isaret} />
       </svg>
       <span
-        className={`p-serif ${yazi} ${
+        className={`${yazi} ${
           boyut === "buyuk" ? "text-[26px]" : "text-[21px]"
-        } leading-none font-medium tracking-[-0.015em]`}
+        } leading-none font-semibold tracking-[-0.03em]`}
       >
         salonkolay
       </span>

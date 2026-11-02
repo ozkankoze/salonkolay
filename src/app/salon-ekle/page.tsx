@@ -33,7 +33,7 @@ export default async function SalonEkle({
       <main className="flex-1 pt-[68px]">
         <div className="mx-auto grid w-full max-w-[1180px] gap-12 px-5 py-14 sm:px-7 sm:py-20 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
           <div>
-            <h1 className="p-serif text-[clamp(30px,5vw,46px)] leading-[1.07] tracking-[-0.018em]">
+            <h1 className="p-baslik text-[clamp(30px,5vw,46px)] leading-[1.07] tracking-[-0.018em]">
               {t.sBaslik}
             </h1>
             <p className="mt-5 max-w-[440px] text-[17px] leading-relaxed text-p-gri">

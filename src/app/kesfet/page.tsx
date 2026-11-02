@@ -65,7 +65,7 @@ export default async function Kesfet({ searchParams }: { searchParams: Promise<S
       <main className="flex-1 pt-[68px]">
         <div className="border-b border-p-cizgi bg-p-zemin">
           <div className="mx-auto w-full max-w-[1180px] px-5 pt-12 pb-8 sm:px-7 sm:pt-16">
-            <h1 className="p-serif text-[clamp(30px,5vw,48px)] leading-[1.06] tracking-[-0.018em]">
+            <h1 className="p-baslik text-[clamp(30px,5vw,48px)] leading-[1.06] tracking-[-0.018em]">
               {t.kBaslik}
             </h1>
             <p className="mt-3 max-w-[460px] text-[16px] text-p-gri">{t.kAciklama}</p>
@@ -144,7 +144,7 @@ export default async function Kesfet({ searchParams }: { searchParams: Promise<S
                çoğunda henüz salon yok. Bunu gizleyip sahte kayıt
                göstermek yerine açıkça söylüyoruz. */
             <div className="mt-8 rounded-[24px] border border-dashed border-p-bej2 bg-p-kart/60 px-6 py-14 text-center">
-              <h2 className="p-serif text-[24px] leading-tight">{t.kBosBaslik}</h2>
+              <h2 className="p-baslik text-[24px] leading-tight">{t.kBosBaslik}</h2>
               <p className="mx-auto mt-3 max-w-[440px] text-[15.5px] leading-relaxed text-p-gri">
                 {t.kBosAciklama}
               </p>

@@ -66,7 +66,7 @@ export default function SalonKart({
 
       <div className="p-5">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="p-serif text-[21px] leading-tight text-p-murekkep">{salon.ad}</h3>
+          <h3 className="p-baslik text-[21px] leading-tight text-p-murekkep">{salon.ad}</h3>
           {sehir && <span className="shrink-0 text-[13.5px] text-p-silik">{sehir}</span>}
         </div>
 

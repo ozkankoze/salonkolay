@@ -139,7 +139,7 @@ export default function UstBar({
                 key={ad}
                 href={yol}
                 onClick={() => setAcik(false)}
-                className="p-serif p-odak border-b border-p-cizgi py-4 text-[26px] text-p-murekkep"
+                className="p-baslik p-odak border-b border-p-cizgi py-4 text-[26px] text-p-murekkep"
               >
                 {ad}
               </Link>
@@ -147,7 +147,7 @@ export default function UstBar({
             <Link
               href={a("/salon-ekle")}
               onClick={() => setAcik(false)}
-              className="p-serif p-odak border-b border-p-cizgi py-4 text-[26px] text-p-murekkep"
+              className="p-baslik p-odak border-b border-p-cizgi py-4 text-[26px] text-p-murekkep"
             >
               {t.pSalonEkle}
             </Link>
