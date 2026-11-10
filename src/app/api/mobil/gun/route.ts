@@ -1,4 +1,4 @@
-import { gununRandevulari, salonunKapaliklari } from "@/lib/depo";
+import { gununRandevulari, kasadaVarMi, salonunKapaliklari } from "@/lib/depo";
 import { calismaBul, anahtarGun } from "@/lib/saat";
 import { bugunTR } from "@/lib/zaman";
 import { hata, istekSalonu, jsonCevap, randevuOzeti, salonOzeti } from "@/lib/mobil";
@@ -30,15 +30,19 @@ export async function GET(istek: Request) {
 
   const calisma = calismaBul(salon, anahtarGun(gun)) ?? null;
 
+  // Hangisi kasaya yazılmış? Uygulama "Kasaya ekle" düğmesini buna
+  // bakarak gösteriyor; panelde de aynı kontrol var.
+  const aktif = randevular
+    .filter((r) => r.durum !== "iptal")
+    .sort((a, b) => a.baslangic - b.baslangic);
+  const kasada = await Promise.all(aktif.map((r) => kasadaVarMi(salon.slug, r.id)));
+
   return jsonCevap({
     gun,
     bugun: bugunTR(),
     salon: salonOzeti(salon),
     calisma,
     kapaliklar: kapaliklar.filter((k) => k.gun === gun),
-    randevular: randevular
-      .filter((r) => r.durum !== "iptal")
-      .sort((a, b) => a.baslangic - b.baslangic)
-      .map((r) => randevuOzeti(salon, r)),
+    randevular: aktif.map((r, i) => ({ ...randevuOzeti(salon, r), kasada: kasada[i] })),
   });
 }
